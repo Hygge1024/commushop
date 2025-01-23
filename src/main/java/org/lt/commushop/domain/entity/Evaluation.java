@@ -9,6 +9,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiImplicitParam;
 
 /**
  * <p>

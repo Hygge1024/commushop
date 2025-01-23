@@ -41,5 +41,7 @@ public class Product implements Serializable {
 
     private Integer stockQuantity;
 
+    private String image_url;
+
 
 }
