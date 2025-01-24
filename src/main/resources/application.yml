@@ -1,14 +1,27 @@
 spring:
   datasource:
     druid:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/commushop?characterEncoding=utf8&serverTimezone=GMT%2b8
-      username: root
-      password: 123456
+      driver-class-name: com.mysql.cj.jdbc.Driver #mysql的驱动类
+      url: jdbc:mysql://localhost:3306/commushop?characterEncoding=utf8&serverTimezone=GMT%2b8 #mysql的地址
+      username: root #mysql的账号
+      password: 123456 #mysql的密码
   application:
-    name: commushop_dev
-server:
-  port: 8080
+    name: commushop_dev #项目名称
   servlet:
-     context-path: /api
+    multipart:
+      enabled: true #是否启用文件上传
+      location: ./temp/upload #文件上传的临时路径
+      max-file-size: 10MB #文件上传的最大大小
+      max-request-size: 10MB #请求的最大大小
 
+server:
+  port: 8080 #服务端口
+  servlet:
+     context-path: /api #接口路径
+
+
+minio:
+  endpoint: http://8.137.53.253:9000 #minio的地址
+  accessKey: zcMqYJlgqDsL5jq233iM #minio的访问密钥
+  secretKey: hDUhzs0t72gVIvIrlOQnwdlzSEOeXYu0Cd5EVXxV #minio的访问密钥
+  bucketName: commoshop #minio的存储桶名称

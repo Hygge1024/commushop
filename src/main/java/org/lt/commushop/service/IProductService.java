@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.lt.commushop.domain.entity.Product;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 
@@ -39,7 +40,7 @@ public interface IProductService extends IService<Product> {
 
     /**
      * 根据商品ID获取商品详情
-     * 
+     *
      * @param id 商品ID
      * @return 商品详情
      */
@@ -47,10 +48,28 @@ public interface IProductService extends IService<Product> {
 
     /**
      * 上传商品
-     * 
+     *
      * @param product 商品对象
      * @return 商品详情
      */
     Product uploadProduct(Product product);
+
+    /**
+     * 更新商品
+     *
+     * @param product 商品对象
+     * @return 商品详情
+     */
+    Product updateProduct(Product product);
+
+
+    /**
+     * 更新商品图片
+     *
+     * @param productId 商品ID
+     * @param fileUrl 文件URL
+     * @return 商品详情
+     */
+    Product updateProductImage(Integer productId, String fileUrl);
 
 }

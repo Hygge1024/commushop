@@ -10,6 +10,8 @@ import org.lt.commushop.mapper.ProductMapper;
 import org.lt.commushop.service.IProductService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.math.BigDecimal;
 
 /**
@@ -83,6 +85,20 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         // 插入新商品
         baseMapper.insert(product);
+        return product;
+    }
+
+    @Override
+    public Product updateProduct(Product product) {
+        baseMapper.updateById(product);
+        return product;
+    }
+
+    @Override
+    public Product updateProductImage(Integer productId, String fileUrl) {
+        Product product = baseMapper.selectById(productId);
+        product.setImage_url(fileUrl);
+        baseMapper.updateById(product);
         return product;
     }
 }

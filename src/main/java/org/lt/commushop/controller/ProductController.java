@@ -1,16 +1,22 @@
 package org.lt.commushop.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.lt.commushop.common.Result;
+import org.lt.commushop.config.MinioConfig;
 import org.lt.commushop.domain.entity.Product;
 import org.lt.commushop.service.IProductService;
+import org.lt.commushop.service.UtilsService.MinioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.io.InputStream;
 
 /**
  * <p>
@@ -23,9 +29,12 @@ import java.math.BigDecimal;
 @Api(tags = "商品管理模块")
 @RestController
 @RequestMapping("/product")
+@Slf4j
 public class ProductController {
     @Autowired
     private IProductService productService;
+    @Autowired
+    private MinioService minioService;
 
     @ApiOperation(value = "商品分页查询", notes = "支持商品名称模糊搜索和价格区间筛选")
     @GetMapping("/page")
@@ -50,8 +59,37 @@ public class ProductController {
 
     @ApiOperation(value = "商品上传", notes = "上传商品")
     @PostMapping("/upload")
-    public Result<Product> uploadProduct(@RequestBody Product product) {
-        return Result.success(productService.uploadProduct(product));
+    public Result<Product> uploadProduct(@RequestParam("file") MultipartFile file, @ModelAttribute Product product) {
+        try {
+            // 上传文件并获取访问URL
+            String fileUrl = minioService.uploadFile(file);
+            product.setImage_url(fileUrl);
+            return Result.success(productService.uploadProduct(product));
+        } catch (Exception e) {
+            log.error("商品上传失败", e);
+            return Result.error("商品上传失败: " + e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "更新商品", notes = "更新商品")
+    @PutMapping("/update")
+    public Result<Product> updateProduct(@RequestBody Product product) {
+        return Result.success(productService.updateProduct(product));
+    }   
+
+    @ApiOperation(value = "更新图片", notes = "更新图片")
+    @PutMapping("/update-image/{productId}")
+    public Result<Product> updateProductImage(
+            @PathVariable("productId") Integer productId,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = minioService.uploadFile(file);
+            Product updatedProduct = productService.updateProductImage(productId, fileUrl);
+            return Result.success(updatedProduct);
+        } catch (Exception e) {
+            log.error("商品图片更新失败", e);
+            return Result.error("商品图片更新失败: " + e.getMessage());
+        }
     }
 
 }
