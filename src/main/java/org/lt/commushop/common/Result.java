@@ -180,4 +180,8 @@ public class Result<T> implements Serializable {
     public Long getTimestamp() {
         return timestamp;
     }
+
+    public Boolean isSuccess() {
+        return this.success != null && this.success;
+    }
 }

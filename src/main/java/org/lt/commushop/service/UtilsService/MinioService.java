@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import io.minio.*;
 import io.minio.http.Method;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,22 @@ import java.util.concurrent.TimeUnit;
 public class MinioService {
     @Autowired
     private MinioClient minioClient;
+    /**
+     * -- GETTER --
+     *  获取Minio的bucketName
+     *
+     * @return
+     */
+    @Getter
     @Value("${minio.bucketName}")
     private String bucketName;
+    /**
+     * -- GETTER --
+     *  获取Minio的endpoint和bucketName
+     *
+     * @return
+     */
+    @Getter
     @Value("${minio.endpoint}")
     private String endpoint;
 
@@ -36,7 +51,7 @@ public class MinioService {
             // 生成唯一文件名
             String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             String fileName = "product/" + IdUtil.getSnowflake().nextIdStr() + extension;//这里Product是文件夹（代表商品图片的存放位置）
-            
+
             // 上传文件
             try (InputStream inputStream = file.getInputStream()) {
                 PutObjectArgs objectArgs = PutObjectArgs.builder()
@@ -47,12 +62,12 @@ public class MinioService {
                         .build();
                 minioClient.putObject(objectArgs);
             }
-            
+
             // 组装完整URL
             String url = String.format("%s/%s/%s", endpoint, bucketName, fileName);
             log.info("文件上传成功，访问URL: {}", url);
             return url;
-            
+
         } catch (Exception e) {
             log.error("文件上传失败", e);
             throw new RuntimeException("文件上传失败: " + e.getMessage());
@@ -86,4 +101,5 @@ public class MinioService {
             throw new RuntimeException("文件删除失败: " + e.getMessage());
         }
     }
+
 }

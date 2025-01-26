@@ -54,7 +54,7 @@ public class ProductController {
     @ApiOperation(value = "商品详情", notes = "根据商品ID获取商品详情")
     @GetMapping("/{id}")
     public Result<Product> getProductDetail(@PathVariable Integer id) {
-        return Result.success(productService.getById(id));
+        return Result.success(productService.getProductDetail(id));
     }
 
     @ApiOperation(value = "商品上传", notes = "上传商品")
@@ -75,7 +75,7 @@ public class ProductController {
     @PutMapping("/update")
     public Result<Product> updateProduct(@RequestBody Product product) {
         return Result.success(productService.updateProduct(product));
-    }   
+    }
 
     @ApiOperation(value = "更新图片", notes = "更新图片")
     @PutMapping("/update-image/{productId}")
@@ -92,4 +92,15 @@ public class ProductController {
         }
     }
 
+    @ApiOperation(value = "删除商品", notes = "根据商品ID删除商品")
+    @DeleteMapping("/delete/{productId}")
+    public Result<String> deleteProduct(@PathVariable("productId") Integer productId) {
+        Result<String> result = productService.deleteProduct(productId);
+        if (result.isSuccess()) {
+            log.info("成功删除商品，ID：" + productId);
+        } else {
+            log.warn("删除商品失败，ID：" + productId + "，原因：" + result.getMessage());
+        }
+        return result;
+    }
 }

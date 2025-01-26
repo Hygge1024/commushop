@@ -1,10 +1,14 @@
 package org.lt.commushop.domain.entity;
 
 import java.math.BigDecimal;
+
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
+import java.util.List;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -12,9 +16,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 /**
- * <p>
- *
- * </p>
  *
  * @author tao
  * @since 2025-01-21
@@ -42,6 +43,9 @@ public class Product implements Serializable {
     private Integer stockQuantity;
 
     private String image_url;
+    // 添加不进行 MyBatis-Plus 内存映射的属性
+    @TableField(exist = false)
+    private List<Category> categories;
 
 
 }

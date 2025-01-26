@@ -2,6 +2,7 @@ package org.lt.commushop.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.entity.Product;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;
@@ -71,5 +72,13 @@ public interface IProductService extends IService<Product> {
      * @return 商品详情
      */
     Product updateProductImage(Integer productId, String fileUrl);
+
+    /**
+     * 删除商品
+     *
+     * @param productId 商品ID
+     * @return 是否删除成功
+     */
+    Result<String> deleteProduct(Integer productId);
 
 }
