@@ -21,9 +21,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/admin").hasAnyAuthority("commushop1")
-                .antMatchers("/user").hasAnyAuthority("commushop2")
-                .anyRequest().permitAll()
+                .antMatchers("/admin").hasAnyAuthority("commushop1")// 管理员权限
+                .antMatchers("/user").hasAnyAuthority("commushop2")// 用户权限
+                .anyRequest().permitAll()// 其他请求都允许访问
                 .and()
                 .formLogin()
                 .loginPage("/login-view")// 登录页面
@@ -32,8 +32,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .failureForwardUrl("/login-fail")// 处理登录失败的URL
                 .and()
                 .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/logout-success");
+                .logoutUrl("/logout")// 表示登出处理的URL
+                .logoutSuccessUrl("/logout-success");// 登出成功的页面地址
     }
 
 }

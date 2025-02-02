@@ -1,7 +1,12 @@
 package org.lt.commushop.service;
 
+import org.lt.commushop.domain.Hander.UserRegistrationDTO;
+import org.lt.commushop.domain.Hander.UserRoleAddress;
 import org.lt.commushop.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.lt.commushop.domain.entity.UserAddress;
+
+import java.util.List;
 
 /**
  * <p>
@@ -17,4 +22,18 @@ public interface IUserService extends IService<User> {
 
     String[] getPermissionList(int userid);
 
+    List<User> getUserInfo();
+
+    User getUserName(String username);
+
+    List<UserRoleAddress> getAllUserRoleAddresses();
+
+    UserRoleAddress getUserDetails(String username);
+
+    User registerUser(UserRegistrationDTO userRegistrationDTO);
+
+    User addAddress(String username, UserAddress userAddress);
+
+    User deleteAddress(String username, Integer addressId);
+    User updateUserInfo(UserRegistrationDTO userRegistrationDTO);
 }
