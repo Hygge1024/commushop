@@ -2,13 +2,12 @@ package org.lt.commushop.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.lt.commushop.common.Result;
-import org.lt.commushop.config.MinioConfig;
+
 import org.lt.commushop.domain.entity.Product;
 import org.lt.commushop.service.IProductService;
 import org.lt.commushop.service.UtilsService.MinioService;
-import org.lt.commushop.service.RecommendationService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.annotations.Api;
@@ -17,8 +16,6 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.io.InputStream;
-import java.util.List;
 
 /**
  * <p>
@@ -37,8 +34,6 @@ public class ProductController {
     private IProductService productService;
     @Autowired
     private MinioService minioService;
-    @Autowired
-    private RecommendationService recommendationService;
 
     @ApiOperation(value = "商品分页查询", notes = "支持商品名称模糊搜索和价格区间筛选")
     @GetMapping("/page")
@@ -108,12 +103,5 @@ public class ProductController {
         return result;
     }
 
-    /**
-     * 根据当前用户ID返回推荐的产品列表
-     */
-    @GetMapping("/recommend/{userId}")
-    public Result<List<Product>> recommendProducts(@PathVariable Integer userId) {
-        List<Product> recommendedProducts = recommendationService.recommendProductsForUser(userId);
-        return Result.success(recommendedProducts);
-    }
+
 }

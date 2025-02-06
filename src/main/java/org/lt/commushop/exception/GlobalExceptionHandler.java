@@ -1,8 +1,6 @@
 package org.lt.commushop.exception;
 
 import org.lt.commushop.common.Result;
-import org.lt.commushop.exception.BusinessException;
-import org.lt.commushop.exception.DuplicateProductException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 

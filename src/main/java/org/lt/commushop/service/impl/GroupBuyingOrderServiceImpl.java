@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -55,7 +54,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
         LambdaQueryWrapper<GroupBuyingActivity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(GroupBuyingActivity::getActivityCode, activityCode);
         GroupBuyingActivity activity = activityService.getOne(queryWrapper);
-        
+
         if (activity == null) {
             throw new BusinessException("活动不存在");
         }
@@ -72,7 +71,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
         LambdaQueryWrapper<ActivityIncludeProduct> productWrapper = new LambdaQueryWrapper<>();
         productWrapper.eq(ActivityIncludeProduct::getPActivityCode, activityCode);
         List<ActivityIncludeProduct> activityProducts = activityIncludeProductMapper.selectList(productWrapper);
-        
+
         if (activityProducts.isEmpty()) {
             throw new BusinessException("活动未关联任何商品");
         }
@@ -96,7 +95,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
                 .setQuantity(quantity)
                 .setOrderStatus(1) // 1表示未支付
                 .setCreateTime(LocalDateTime.now());
-        
+
         // 计算订单总金额
         order.setOrderAmount(totalUnitPrice.multiply(BigDecimal.valueOf(quantity)));
 
@@ -153,22 +152,22 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
 
         // 3. 构建查询条件
         LambdaQueryWrapper<GroupBuyingOrder> queryWrapper = new LambdaQueryWrapper<>();
-        
+
         // 3.1 用户ID查询（非必填）
         if (userId != null) {
             queryWrapper.eq(GroupBuyingOrder::getUserId, userId);
         }
-        
+
         // 3.2 活动ID查询
         if (activityId != null) {
             queryWrapper.eq(GroupBuyingOrder::getActivityId, activityId);
         }
-        
+
         // 3.3 订单状态查询
         if (orderStatus != null) {
             queryWrapper.eq(GroupBuyingOrder::getOrderStatus, orderStatus);
         }
-        
+
         // 3.4 订单金额范围查询
         if (minAmount != null) {
             queryWrapper.ge(GroupBuyingOrder::getOrderAmount, minAmount);
@@ -176,7 +175,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
         if (maxAmount != null) {
             queryWrapper.le(GroupBuyingOrder::getOrderAmount, maxAmount);
         }
-        
+
         // 3.5 创建时间范围查询
         if (startTime != null) {
             queryWrapper.ge(GroupBuyingOrder::getCreateTime, startTime);
@@ -184,7 +183,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
         if (endTime != null) {
             queryWrapper.le(GroupBuyingOrder::getCreateTime, endTime);
         }
-        
+
         // 3.6 按创建时间倒序排序
         queryWrapper.orderByDesc(GroupBuyingOrder::getCreateTime);
 

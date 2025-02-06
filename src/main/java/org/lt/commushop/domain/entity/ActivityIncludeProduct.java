@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+
 /**
  * <p>
  * 活动包含商品关联表
@@ -22,7 +24,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @TableName("activity_include_product")
 @ApiModel(value="ActivityIncludeProduct对象", description="活动包含商品关联表")
-public class ActivityIncludeProduct {
+public class ActivityIncludeProduct implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "关联ID")

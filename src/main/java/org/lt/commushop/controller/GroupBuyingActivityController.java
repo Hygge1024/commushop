@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
-import org.lt.commushop.domain.vo.ActivityWithProductsVO;
 import org.lt.commushop.service.IGroupBuyingActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;

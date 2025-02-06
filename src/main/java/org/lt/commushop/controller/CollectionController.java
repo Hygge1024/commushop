@@ -11,7 +11,7 @@ import org.lt.commushop.service.ICollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-@Api(tags = "商品收藏模管理模块", description = "收藏相关API")
+@Api(tags = "商品收藏模管理模块")
 @RestController
 @RequestMapping("/collection")   // 前缀
 public class CollectionController {

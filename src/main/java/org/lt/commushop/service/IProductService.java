@@ -1,13 +1,9 @@
 package org.lt.commushop.service;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.lt.commushop.common.Result;
-import org.lt.commushop.domain.Hander.CollectionVO;
-import org.lt.commushop.domain.entity.Collection;
 import org.lt.commushop.domain.entity.Product;
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import java.math.BigDecimal;
 

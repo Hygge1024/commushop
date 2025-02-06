@@ -2,9 +2,7 @@ package org.lt.commushop.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.checkerframework.checker.units.qual.A;
+
 import org.lt.commushop.domain.Hander.UserRegistrationDTO;
 import org.lt.commushop.domain.Hander.UserRoleAddress;
 import org.lt.commushop.domain.entity.Permission;
@@ -173,7 +171,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 检查用户名是否已存在
         User existingUser = userMapper.selectOne(new QueryWrapper<User>().eq("username", userRegistrationDTO.getUsername()));
         if (existingUser != null) {
-            throw new IllegalArgumentException("用户名已被注册"); 
+            throw new IllegalArgumentException("用户名已被注册");
         }
 
         // 创建User对象

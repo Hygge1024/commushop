@@ -3,7 +3,6 @@ package org.lt.commushop.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
-import org.lt.commushop.domain.vo.ActivityWithProductsVO;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -3,8 +3,7 @@ package org.lt.commushop.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.checkerframework.checker.units.qual.A;
-import org.lt.commushop.common.Result;
+
 import org.lt.commushop.domain.Hander.CollectionVO;
 import org.lt.commushop.domain.entity.Collection;
 import org.lt.commushop.domain.entity.Product;
