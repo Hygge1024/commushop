@@ -38,6 +38,8 @@ public class GroupBuyingOrder implements Serializable {
 
     private Integer orderStatus;
 
+    private Integer quantity;
+
     private BigDecimal orderAmount;
 
     private LocalDateTime createTime;

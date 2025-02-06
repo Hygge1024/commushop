@@ -42,7 +42,7 @@ public class Product implements Serializable {
 
     private Integer stockQuantity;
 
-    private String image_url;
+    private String imageUrl;
     // 添加不进行 MyBatis-Plus 内存映射的属性
     @TableField(exist = false)
     private List<Category> categories;

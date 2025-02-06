@@ -174,7 +174,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public Product updateProductImage(Integer productId, String fileUrl) {
         Product product = baseMapper.selectById(productId);
-        product.setImage_url(fileUrl);
+        product.setImageUrl(fileUrl);
         baseMapper.updateById(product);
         return product;// 返回更新后的商品
     }
@@ -193,7 +193,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             productCategoryRelationshipMapper.deleteById(productId);
 
             // 获取图片URL并从中提取对象名称
-            String imageUrl = existingProduct.getImage_url();
+            String imageUrl = existingProduct.getImageUrl();
             if (imageUrl != null && !imageUrl.isEmpty()) {
                 // URL格式为 http://8.137.53.253:9000/commoshop/product/1882865666625691648.png
                 String prefix = minioService.getEndpoint() + "/" + minioService.getBucketName() + "/";
@@ -219,5 +219,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             log.error("删除商品失败，ID: {}", productId, e);
             return Result.error("删除商品失败: " + e.getMessage());
         }
+    }
+
+    @Override
+    public boolean checkProductExists(Integer productId) {
+        if (productId == null) {
+            return false;
+        }
+        Product product = this.getById(productId);
+        return product != null;
     }
 }

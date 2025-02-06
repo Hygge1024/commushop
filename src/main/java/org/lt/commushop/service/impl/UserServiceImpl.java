@@ -173,7 +173,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 检查用户名是否已存在
         User existingUser = userMapper.selectOne(new QueryWrapper<User>().eq("username", userRegistrationDTO.getUsername()));
         if (existingUser != null) {
-            throw new IllegalArgumentException("用户名已被注册"); // 或者返回一个自定义的错误响应
+            throw new IllegalArgumentException("用户名已被注册"); 
         }
 
         // 创建User对象

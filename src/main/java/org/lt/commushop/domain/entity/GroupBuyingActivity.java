@@ -31,7 +31,8 @@ public class GroupBuyingActivity implements Serializable {
     @TableId(value = "activity_id", type = IdType.AUTO)
     private Integer activityId;
 
-    private Integer productId;
+    private String activityCode;
+
 
     private String activityName;
 

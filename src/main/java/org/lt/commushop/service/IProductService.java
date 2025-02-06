@@ -3,6 +3,8 @@ package org.lt.commushop.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.lt.commushop.common.Result;
+import org.lt.commushop.domain.Hander.CollectionVO;
+import org.lt.commushop.domain.entity.Collection;
 import org.lt.commushop.domain.entity.Product;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;
@@ -81,4 +83,11 @@ public interface IProductService extends IService<Product> {
      */
     Result<String> deleteProduct(Integer productId);
 
+    /**
+     * 检查商品是否存在
+     *
+     * @param productId 商品ID
+     * @return 商品是否存在
+     */
+    boolean checkProductExists(Integer productId);
 }
