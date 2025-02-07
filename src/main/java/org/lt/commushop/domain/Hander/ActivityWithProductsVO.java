@@ -1,4 +1,4 @@
-package org.lt.commushop.domain.vo;
+package org.lt.commushop.domain.Hander;
 
 import lombok.Data;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
@@ -15,7 +15,7 @@ public class ActivityWithProductsVO {
      * 团购活动信息
      */
     private GroupBuyingActivity activity;
-    
+
     /**
      * 活动关联的商品列表
      */

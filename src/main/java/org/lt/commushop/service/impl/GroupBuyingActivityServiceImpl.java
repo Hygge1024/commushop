@@ -1,23 +1,28 @@
 package org.lt.commushop.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.lt.commushop.domain.Hander.ActivityWithProductsVO;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
 import org.lt.commushop.domain.entity.ActivityIncludeProduct;
+import org.lt.commushop.domain.entity.Product;
 import org.lt.commushop.mapper.GroupBuyingActivityMapper;
 import org.lt.commushop.mapper.ActivityIncludeProductMapper;
+import org.lt.commushop.service.IActivityIncludeProductService;
 import org.lt.commushop.service.IGroupBuyingActivityService;
 import org.lt.commushop.exception.BusinessException;
 import org.lt.commushop.service.IProductService;
 import org.lt.commushop.config.ActivityCodeGenerator;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -38,6 +43,9 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
 
     @Autowired
     private ActivityCodeGenerator activityCodeGenerator;
+
+    @Autowired
+    private IActivityIncludeProductService activityIncludeProductService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -139,22 +147,22 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
     }
 
     @Override
-    public Page<GroupBuyingActivity> getActivityPage(Integer current, Integer size,
-                                                    String activityCode, String activityName,
-                                                    LocalDateTime startTime, LocalDateTime endTime) {
+    public Page<ActivityWithProductsVO> getActivityPage(Integer current, Integer size,
+                                                        String activityCode, String activityName,
+                                                        LocalDateTime startTime, LocalDateTime endTime) {
         // 1. 创建分页对象
-        Page<GroupBuyingActivity> page = new Page<>(current, size);
+        Page<GroupBuyingActivity> activityPage = new Page<>(current, size);
 
         // 2. 构建查询条件
         LambdaQueryWrapper<GroupBuyingActivity> queryWrapper = new LambdaQueryWrapper<>();
 
         // 2.1 活动编码查询
-        if (activityCode != null && !activityCode.trim().isEmpty()) {
+        if (org.springframework.util.StringUtils.hasText(activityCode)) {// 如果activityCode不为空
             queryWrapper.eq(GroupBuyingActivity::getActivityCode, activityCode);
         }
 
         // 2.2 活动名称模糊查询
-        if (activityName != null && !activityName.trim().isEmpty()) {
+        if (org.springframework.util.StringUtils.hasText(activityName)) {// 如果activityName不为空
             queryWrapper.like(GroupBuyingActivity::getActivityName, activityName);
         }
 
@@ -169,7 +177,37 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
         // 2.4 按活动开始时间倒序排序
         queryWrapper.orderByDesc(GroupBuyingActivity::getActivityStartTime);
 
-        // 3. 执行分页查询
-        return this.page(page, queryWrapper);
+        // 3. 执行活动分页查询
+        Page<GroupBuyingActivity> activityResult = this.page(activityPage, queryWrapper);
+
+        // 4. 转换为VO对象，并查询关联的商品
+        Page<ActivityWithProductsVO> voPage = new Page<>(current, size, activityResult.getTotal());
+        List<ActivityWithProductsVO> voList = activityResult.getRecords().stream().map(activity -> {
+            ActivityWithProductsVO vo = new ActivityWithProductsVO();
+            vo.setActivity(activity);
+
+            // 4.1 查询活动关联的商品ID
+            LambdaQueryWrapper<ActivityIncludeProduct> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.eq(ActivityIncludeProduct::getPActivityCode, activity.getActivityCode());
+            List<ActivityIncludeProduct> relations = activityIncludeProductService.list(productWrapper);
+
+            if (!relations.isEmpty()) {
+                // 4.2 获取所有商品ID
+                List<Integer> productIds = relations.stream()
+                        .map(ActivityIncludeProduct::getProductId)
+                        .collect(Collectors.toList());
+
+                // 4.3 查询商品详情
+                List<Product> products = productService.listByIds(productIds);
+                vo.setProducts(products);
+            } else {
+                vo.setProducts(Collections.emptyList());
+            }
+
+            return vo;
+        }).collect(Collectors.toList());
+
+        voPage.setRecords(voList);
+        return voPage;
     }
 }

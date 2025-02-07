@@ -5,6 +5,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.lt.commushop.common.Result;
+import org.lt.commushop.domain.Hander.ActivityWithProductsVO;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
 import org.lt.commushop.service.IGroupBuyingActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +36,8 @@ public class GroupBuyingActivityController {
     public Result<Boolean> createActivity(
             @ApiParam(value = "团购活动信息", required = true) @RequestBody GroupBuyingActivity activity,
             @ApiParam(value = "关联的商品ID列表", required = true) @RequestParam("productIds") List<Integer> productIds) {
-        groupBuyingActivityService.createGroupBuyingActivity(activity, productIds);
-        return Result.success(true, "创建团购活动成功");
+        boolean result = groupBuyingActivityService.createGroupBuyingActivity(activity, productIds);
+        return Result.success(result, "创建团购活动成功");
     }
 
     @ApiOperation(value = "删除团购活动", notes = "管理员删除团购活动")
@@ -49,7 +50,7 @@ public class GroupBuyingActivityController {
 
     @ApiOperation(value = "团购活动分页查询", notes = "支持活动编码、名称、时间范围等多条件筛选，返回结果包含活动关联的商品信息")
     @GetMapping("/page")
-    public Result<Page<GroupBuyingActivity>> getActivityPage(
+    public Result<Page<ActivityWithProductsVO>> getActivityPage(
             @ApiParam(value = "当前页码", defaultValue = "1") @RequestParam(defaultValue = "1") Integer current,
             @ApiParam(value = "每页数量", defaultValue = "10") @RequestParam(defaultValue = "10") Integer size,
             @ApiParam(value = "活动编码") @RequestParam(required = false) String activityCode,

@@ -3,6 +3,7 @@ package org.lt.commushop.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
+import org.lt.commushop.domain.Hander.ActivityWithProductsVO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,9 +42,9 @@ public interface IGroupBuyingActivityService extends IService<GroupBuyingActivit
      * @param activityName 活动名称（支持模糊查询）
      * @param startTime 活动开始时间
      * @param endTime 活动结束时间
-     * @return 分页结果
+     * @return 分页结果，包含活动信息和关联的商品列表
      */
-    Page<GroupBuyingActivity> getActivityPage(Integer current, Integer size,
+    Page<ActivityWithProductsVO> getActivityPage(Integer current, Integer size,
                                              String activityCode, String activityName,
                                              LocalDateTime startTime, LocalDateTime endTime);
 }

@@ -4,6 +4,11 @@ import org.lt.commushop.common.Result;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * 全局异常处理类
+ * 自动拦截所有Controller抛出的异常
+ */
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateProductException.class)
@@ -26,7 +31,4 @@ public class GlobalExceptionHandler {
         return Result.error("服务器内部错误：" + e.getMessage());
     }
 }
-/**
- * 全局异常处理类
- * 自动拦截所有Controller抛出的异常
- */
+
