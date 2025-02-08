@@ -2,8 +2,8 @@ package org.lt.commushop.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.lt.commushop.domain.Hander.EvaluationVO;
 import org.lt.commushop.domain.entity.Evaluation;
-import org.lt.commushop.domain.vo.EvaluationVO;
 
 /**
  * <p>
@@ -14,7 +14,7 @@ import org.lt.commushop.domain.vo.EvaluationVO;
  * @since 2025-02-07
  */
 public interface IEvaluationService extends IService<Evaluation> {
-    
+
     /**
      * 添加商品评价
      *
@@ -22,12 +22,11 @@ public interface IEvaluationService extends IService<Evaluation> {
      * @return 是否添加成功
      */
     boolean addEvaluation(Evaluation evaluation);
-    
+
     /**
      * 校验评价参数
      *
      * @param evaluation 评价信息
-     * @throws BusinessException 业务异常
      */
     void validateEvaluation(Evaluation evaluation);
 
@@ -51,6 +50,6 @@ public interface IEvaluationService extends IService<Evaluation> {
      * @return 评价分页结果
      */
     IPage<EvaluationVO> getEvaluationPage(Integer current, Integer size,
-                                         Integer userId, Integer productId,
-                                         Integer minScore, Integer maxScore);
+                                          Integer userId, Integer productId,
+                                          Integer minScore, Integer maxScore);
 }
