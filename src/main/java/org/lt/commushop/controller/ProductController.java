@@ -102,6 +102,18 @@ public class ProductController {
         }
         return result;
     }
+    @ApiOperation(value = "软删除商品", notes = "根据商品ID软删除商品")
+    @DeleteMapping("/deletesoft/{productId}")
+    public Result<String> deleteProductSoft(@PathVariable("productId") Integer productId) {
+        Result<String> result = productService.deleteProductSoft(productId);
+        if (result.isSuccess()) {
+            log.info("成功删除商品，ID：" + productId);
+        } else {
+            log.warn("删除商品失败，ID：" + productId + "，原因：" + result.getMessage());
+        }
+        return result;
+    }
+
 
 
 }

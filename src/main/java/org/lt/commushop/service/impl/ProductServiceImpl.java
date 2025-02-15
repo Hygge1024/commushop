@@ -221,6 +221,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
+    public Result<String> deleteProductSoft(Integer productId) {
+        // 检查商品是否存在
+        Product existingProduct = baseMapper.selectById(productId);
+        if (existingProduct == null) {
+            log.warn("尝试删除不存在的商品，ID: {}", productId);
+            return Result.error("商品不存在");
+        }
+        if(existingProduct.getIsDeleted() != null && existingProduct.getIsDeleted() == 1){
+            return Result.error("商品已删除");
+        }
+        //软删除
+        existingProduct.setIsDeleted(1);
+
+        return this.updateById(existingProduct) ? Result.success("商品删除成功") : Result.error("商品删除失败");
+    }
+
+    @Override
     public boolean checkProductExists(Integer productId) {
         if (productId == null) {
             return false;

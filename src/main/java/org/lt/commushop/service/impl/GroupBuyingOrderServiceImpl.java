@@ -98,6 +98,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
 
         // 计算订单总金额
         order.setOrderAmount(totalUnitPrice.multiply(BigDecimal.valueOf(quantity)));
+        order.setIsDeleted(0);
 
         // 6. 保存订单
         this.save(order);
@@ -129,8 +130,14 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
             throw new BusinessException("只能删除未支付的订单");
         }
 
-        // 5. 删除订单
-        return this.removeById(orderId);
+        // 5. 检查订单是否已被删除
+        if (order.getIsDeleted() == 1) {
+            throw new BusinessException("订单已被删除");
+        }
+
+        // 6. 软删除订单
+        order.setIsDeleted(1);
+        return this.updateById(order);
     }
 
     @Override
@@ -153,22 +160,25 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
         // 3. 构建查询条件
         LambdaQueryWrapper<GroupBuyingOrder> queryWrapper = new LambdaQueryWrapper<>();
 
-        // 3.1 用户ID查询（非必填）
+        // 3.1 过滤已删除的订单
+        queryWrapper.eq(GroupBuyingOrder::getIsDeleted, 0);
+
+        // 3.2 用户ID查询（非必填）
         if (userId != null) {
             queryWrapper.eq(GroupBuyingOrder::getUserId, userId);
         }
 
-        // 3.2 活动ID查询
+        // 3.3 活动ID查询
         if (activityId != null) {
             queryWrapper.eq(GroupBuyingOrder::getActivityId, activityId);
         }
 
-        // 3.3 订单状态查询
+        // 3.4 订单状态查询
         if (orderStatus != null) {
             queryWrapper.eq(GroupBuyingOrder::getOrderStatus, orderStatus);
         }
 
-        // 3.4 订单金额范围查询
+        // 3.5 订单金额范围查询
         if (minAmount != null) {
             queryWrapper.ge(GroupBuyingOrder::getOrderAmount, minAmount);
         }
@@ -176,7 +186,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
             queryWrapper.le(GroupBuyingOrder::getOrderAmount, maxAmount);
         }
 
-        // 3.5 创建时间范围查询
+        // 3.6 创建时间范围查询
         if (startTime != null) {
             queryWrapper.ge(GroupBuyingOrder::getCreateTime, startTime);
         }
@@ -184,7 +194,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
             queryWrapper.le(GroupBuyingOrder::getCreateTime, endTime);
         }
 
-        // 3.6 按创建时间倒序排序
+        // 3.7 按创建时间倒序排序
         queryWrapper.orderByDesc(GroupBuyingOrder::getCreateTime);
 
         // 4. 执行分页查询

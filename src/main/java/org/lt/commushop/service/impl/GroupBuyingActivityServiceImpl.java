@@ -58,6 +58,14 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
             throw new BusinessException("创建团购活动失败：必须选择至少一个商品");
         }
 
+        // 1.1 检查活动名称是否已存在（排除已删除的活动）
+        LambdaQueryWrapper<GroupBuyingActivity> nameCheckWrapper = new LambdaQueryWrapper<>();
+        nameCheckWrapper.eq(GroupBuyingActivity::getActivityName, activity.getActivityName())
+                .ne(GroupBuyingActivity::getIsDeleted, 1);
+        if (this.count(nameCheckWrapper) > 0) {
+            throw new BusinessException("创建团购活动失败：活动名称已存在");
+        }
+
         // 2. 检查商品是否都存在
         for (Integer productId : productIds) {
             if (!productService.checkProductExists(productId)) {
@@ -90,6 +98,8 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
         } while (true);
 
         activity.setActivityCode(activityCode);
+        // 设置删除标记的默认值为0（未删除）
+        activity.setIsDeleted(0);
 
         // 4. 保存团购活动信息
         if (!this.save(activity)) {
@@ -137,13 +147,14 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
             throw new BusinessException("活动已开始，无法删除");
         }
 
-        // 3. 删除活动相关的商品关联
-        LambdaQueryWrapper<ActivityIncludeProduct> productWrapper = new LambdaQueryWrapper<>();
-        productWrapper.eq(ActivityIncludeProduct::getPActivityCode, activity.getActivityCode());
-        activityIncludeProductMapper.delete(productWrapper);
+        // 3. 检查活动是否已被删除
+        if (activity.getIsDeleted() != null && activity.getIsDeleted() == 1) {
+            throw new BusinessException("活动已被删除");
+        }
 
-        // 4. 删除活动
-        return this.removeById(activityId);
+        // 4. 软删除活动
+        activity.setIsDeleted(1);
+        return this.updateById(activity);
     }
 
     @Override
@@ -155,6 +166,9 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
 
         // 2. 构建查询条件
         LambdaQueryWrapper<GroupBuyingActivity> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 2.0 过滤已删除的活动（isDeleted = 1）
+        queryWrapper.ne(GroupBuyingActivity::getIsDeleted, 1);
 
         // 2.1 活动编码查询
         if (org.springframework.util.StringUtils.hasText(activityCode)) {// 如果activityCode不为空

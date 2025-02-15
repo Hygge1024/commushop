@@ -46,5 +46,7 @@ public class Product implements Serializable {
     @TableField(exist = false)
     private List<Category> categories;
 
+    private Integer isDeleted;
+
 
 }

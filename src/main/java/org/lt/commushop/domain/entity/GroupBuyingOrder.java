@@ -43,5 +43,7 @@ public class GroupBuyingOrder implements Serializable {
 
     private LocalDateTime createTime;
 
+    private Integer isDeleted;
+
 
 }

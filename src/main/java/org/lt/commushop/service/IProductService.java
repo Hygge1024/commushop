@@ -79,6 +79,8 @@ public interface IProductService extends IService<Product> {
      */
     Result<String> deleteProduct(Integer productId);
 
+    Result<String> deleteProductSoft(Integer productId);
+
     /**
      * 检查商品是否存在
      *
