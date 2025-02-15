@@ -1,58 +1,70 @@
 import React, { useEffect, useState } from 'react';
 import { Avatar, Dropdown, message } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { getUserInfo } from '../services/userService';
-
+// import axios from '../utils/axios';
+// import config from '../utils/config';
+import { userService } from '../services/userService';
 const UserAvatar = () => {
   const [userInfo, setUserInfo] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUserInfo();
+    const username = localStorage.getItem('username'); // 从登录时保存的信息中获取用户名
+    if (username) {
+      fetchUserInfo(username);
+    }
   }, []);
 
-  const fetchUserInfo = async () => {
+  //下面的代码需要修改的————应该使用统一的方式
+  const fetchUserInfo = async (username) => {
     try {
-      const response = await getUserInfo('john_doe');
+      // const response = await axios.get(`http://localhost:8080/api/userInfo/${username}`);
+      console.log('Calling API with params:', username);
+
+      const response = await userService.getUserInfo(username);
+
+      console.log('用户信息响应:', response.data);
+
       if (response.success) {
         setUserInfo(response.data);
       } else {
-        message.error('获取用户信息失败');
+        message.error('获取用户信息失败: ' + response.message);
       }
     } catch (error) {
+      console.error('获取用户信息错误:', error);
       message.error('获取用户信息失败');
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username'); // 同时清除用户名
+    message.success('已退出登录');
+    navigate('/login');
+  };
+
   const items = [
     {
-      key: '1',
-      label: '个人设置',
-      onClick: () => navigate('/settings')
-    },
-    {
-      key: '2',
+      key: 'logout',
+      icon: <LogoutOutlined />,
       label: '退出登录',
-      onClick: () => {
-        // 这里添加退出登录逻辑
-        message.success('退出成功');
-      }
+      onClick: handleLogout,
     },
   ];
 
   return (
     <Dropdown menu={{ items }} placement="bottomRight">
       <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-        <Avatar 
-          style={{ 
+        <Avatar
+          style={{
             backgroundColor: '#1890ff',
             marginRight: '8px'
-          }} 
+          }}
           icon={<UserOutlined />}
         />
         <span style={{ color: 'rgba(0, 0, 0, 0.85)' }}>
-          {userInfo?.fullname || '加载中...'}
+          {userInfo ? userInfo.fullname : '加载中...'}
         </span>
       </div>
     </Dropdown>
