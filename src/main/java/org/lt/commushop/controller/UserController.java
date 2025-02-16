@@ -1,14 +1,18 @@
 package org.lt.commushop.controller;
 
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.Hander.UserRegistrationDTO;
 import org.lt.commushop.domain.Hander.UserRoleAddress;
 import org.lt.commushop.domain.entity.User;
 import org.lt.commushop.domain.entity.UserAddress;
+import org.lt.commushop.domain.vo.UserQueryVO;
+import org.lt.commushop.domain.vo.UserStatisticsVO;
 import org.lt.commushop.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -155,4 +159,21 @@ public class UserController {
         return Result.success(user);
     }
 
+    @GetMapping("/page")
+    @ApiOperation("分页查询用户")
+    public Result<IPage<UserQueryVO>> getUserPage(
+            @ApiParam(value = "当前页码", required = true) @RequestParam Integer current,
+            @ApiParam(value = "每页大小", required = true) @RequestParam Integer size,
+            @ApiParam(value = "用户ID") @RequestParam(required = false) Long userId,
+            @ApiParam(value = "用户名") @RequestParam(required = false) String username,
+            @ApiParam(value = "手机号") @RequestParam(required = false) String phone) {
+
+        return Result.success(userService.getUserPage(current, size, userId, username, phone));
+    }
+
+    @ApiOperation("获取用户统计信息")
+    @GetMapping("/statistics")
+    public Result<UserStatisticsVO> getUserStatistics() {
+        return Result.success(userService.getUserStatistics());
+    }
 }

@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.entity.PaymentRecord;
+import org.lt.commushop.domain.vo.PaymentQueryVO;
+import org.lt.commushop.domain.vo.PaymentStatisticsVO;
 import org.lt.commushop.service.IPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -57,5 +59,33 @@ public class PaymentController {
                 orderId, userId,
                 minAmount, maxAmount,
                 startTime, endTime));
+    }
+    @GetMapping("/pageDetails")
+    @ApiOperation("分页查询支付记录")
+    public Result<IPage<PaymentQueryVO>> getPaymentPage(
+            @ApiParam(value = "当前页码", required = true) @RequestParam Integer current,
+            @ApiParam(value = "每页大小", required = true) @RequestParam Integer size,
+            @ApiParam(value = "支付ID") @RequestParam(required = false) Integer paymentId,
+            @ApiParam(value = "订单ID") @RequestParam(required = false) Integer orderId,
+            @ApiParam(value = "活动ID") @RequestParam(required = false) Integer activityId,
+            @ApiParam(value = "支付方式") @RequestParam(required = false) String paymentMethod,
+            @ApiParam(value = "开始时间", example = "2025-02-07 00:00:00")
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
+            @ApiParam(value = "结束时间", example = "2025-02-07 23:59:59")
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
+
+        return Result.success(paymentService.getPaymentPage(current, size,
+                paymentId, orderId, activityId, paymentMethod,
+                startTime, endTime));
+    }
+    @GetMapping("/statistics")
+    @ApiOperation("获取支付统计数据")
+    public Result<PaymentStatisticsVO> getPaymentStatistics(
+            @ApiParam(value = "开始时间", example = "2024-01-01 00:00:00")
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
+            @ApiParam(value = "结束时间", example = "2024-01-05 23:59:59")
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
+
+        return Result.success(paymentService.getPaymentStatistics(startTime, endTime));
     }
 }

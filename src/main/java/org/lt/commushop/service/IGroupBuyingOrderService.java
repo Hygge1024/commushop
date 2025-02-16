@@ -85,4 +85,11 @@ public interface IGroupBuyingOrderService extends IService<GroupBuyingOrder> {
      * @return 订单统计信息
      */
     OrderStatisticsVO getOrderStatistics();
+
+    /**
+     * 订单发货
+     * @param orderId 订单ID
+     * @return 是否发货成功
+     */
+    boolean shipOrder(Integer orderId);
 }

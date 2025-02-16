@@ -415,6 +415,24 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
         return statistics;
     }
 
+    @Override
+    public boolean shipOrder(Integer orderId) {
+        // 1. 查询订单是否存在
+        GroupBuyingOrder order = this.getById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+
+        // 2. 检查订单状态是否为已支付（3）
+        if (!order.getOrderStatus().equals(3)) {
+            throw new BusinessException("只有已支付的订单才能发货");
+        }
+
+        // 3. 更新订单状态为已发货（4）
+        order.setOrderStatus(4);
+        return this.updateById(order);
+    }
+
     // 用于转换周几的数字
     private static final String[] CHINESE_NUMBERS = {"一", "二", "三", "四", "五", "六", "日"};
 }

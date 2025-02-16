@@ -4,19 +4,28 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.lt.commushop.domain.entity.GroupBuyingActivity;
 import org.lt.commushop.domain.entity.GroupBuyingOrder;
 import org.lt.commushop.domain.entity.PaymentRecord;
+import org.lt.commushop.domain.vo.PaymentQueryVO;
+import org.lt.commushop.domain.vo.PaymentStatisticsVO;
 import org.lt.commushop.exception.BusinessException;
 import org.lt.commushop.mapper.PaymentRecordMapper;
+import org.lt.commushop.service.IGroupBuyingActivityService;
 import org.lt.commushop.service.IGroupBuyingOrderService;
 import org.lt.commushop.service.IPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +41,9 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
 
     @Autowired
     private IGroupBuyingOrderService orderService;
+
+    @Autowired
+    private IGroupBuyingActivityService activityService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -141,5 +153,163 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
 
         // 5. 执行分页查询
         return this.page(page, queryWrapper);
+    }
+
+    @Override
+    public IPage<PaymentQueryVO> getPaymentPage(Integer current, Integer size,
+                                                Integer paymentId, Integer orderId,
+                                                Integer activityId, String paymentMethod,
+                                                LocalDateTime startTime, LocalDateTime endTime) {
+        // 1. 创建分页对象
+        Page<PaymentRecord> page = new Page<>(current, size);
+
+        // 2. 构建查询条件
+        LambdaQueryWrapper<PaymentRecord> wrapper = new LambdaQueryWrapper<>();
+
+        if (paymentId != null) {
+            wrapper.eq(PaymentRecord::getPaymentId, paymentId);
+        }
+        if (orderId != null) {
+            wrapper.eq(PaymentRecord::getOrderId, orderId);
+        }
+        if (StringUtils.hasText(paymentMethod)) {
+            wrapper.eq(PaymentRecord::getPaymentMethod, paymentMethod);
+        }
+        if (startTime != null) {
+            wrapper.ge(PaymentRecord::getPaymentTime, startTime);
+        }
+        if (endTime != null) {
+            wrapper.le(PaymentRecord::getPaymentTime, endTime);
+        }
+
+        // 3. 查询支付记录
+        IPage<PaymentRecord> paymentPage = this.page(page, wrapper);
+
+        // 4. 获取所有关联的订单ID
+        Set<Integer> orderIds = paymentPage.getRecords().stream()
+                .map(PaymentRecord::getOrderId)
+                .collect(Collectors.toSet());
+
+        // 5. 批量查询订单信息
+        Map<Integer, GroupBuyingOrder> orderMap = new HashMap<>();
+        Set<Integer> activityIds = new HashSet<>();
+
+        if (!orderIds.isEmpty()) {
+            LambdaQueryWrapper<GroupBuyingOrder> orderWrapper = new LambdaQueryWrapper<>();
+            orderWrapper.in(GroupBuyingOrder::getOrderId, orderIds);
+            if (activityId != null) {
+                orderWrapper.eq(GroupBuyingOrder::getActivityId, activityId);
+            }
+            List<GroupBuyingOrder> orders = orderService.list(orderWrapper);
+            orderMap = orders.stream()
+                    .collect(Collectors.toMap(GroupBuyingOrder::getOrderId, order -> order));
+
+            // 收集活动ID
+            activityIds = orders.stream()
+                    .map(GroupBuyingOrder::getActivityId)
+                    .collect(Collectors.toSet());
+        }
+
+        // 6. 批量查询活动信息
+        Map<Integer, GroupBuyingActivity> activityMap = new HashMap<>();
+        if (!activityIds.isEmpty()) {
+            LambdaQueryWrapper<GroupBuyingActivity> activityWrapper = new LambdaQueryWrapper<>();
+            activityWrapper.in(GroupBuyingActivity::getActivityId, activityIds);
+            List<GroupBuyingActivity> activities = activityService.list(activityWrapper);
+            activityMap = activities.stream()
+                    .collect(Collectors.toMap(GroupBuyingActivity::getActivityId, activity -> activity));
+        }
+
+        // 7. 组装VO对象
+        IPage<PaymentQueryVO> resultPage = new Page<>(current, size, paymentPage.getTotal());
+        List<PaymentQueryVO> voList = new ArrayList<>();
+
+        for (PaymentRecord payment : paymentPage.getRecords()) {
+            PaymentQueryVO vo = new PaymentQueryVO();
+            vo.setPayment(payment);
+
+            // 设置订单信息
+            GroupBuyingOrder order = orderMap.get(payment.getOrderId());
+            vo.setOrder(order);
+
+            // 设置活动信息
+            if (order != null) {
+                vo.setActivity(activityMap.get(order.getActivityId()));
+            }
+
+            voList.add(vo);
+        }
+
+        resultPage.setRecords(voList);
+        return resultPage;
+    }
+
+    @Override
+    public PaymentStatisticsVO getPaymentStatistics(LocalDateTime startTime, LocalDateTime endTime) {
+        PaymentStatisticsVO statistics = new PaymentStatisticsVO();
+
+        // 1. 构建查询条件
+        LambdaQueryWrapper<PaymentRecord> wrapper = new LambdaQueryWrapper<>();
+        if (startTime != null) {
+            wrapper.ge(PaymentRecord::getPaymentTime, startTime);
+        }
+        if (endTime != null) {
+            wrapper.le(PaymentRecord::getPaymentTime, endTime);
+        }
+        wrapper.orderByAsc(PaymentRecord::getPaymentTime);
+        List<PaymentRecord> payments = this.list(wrapper);
+
+        // 2. 计算总支付金额
+        BigDecimal totalAmount = payments.stream()
+                .map(PaymentRecord::getPaymentAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        statistics.setTotalAmount(totalAmount);
+
+        // 3. 设置支付笔数
+        statistics.setPaymentCount(payments.size());
+
+        // 4. 计算平均支付金额
+        BigDecimal averageAmount = payments.isEmpty() ? BigDecimal.ZERO :
+                totalAmount.divide(new BigDecimal(payments.size()), 2, RoundingMode.HALF_UP);
+        statistics.setAverageAmount(averageAmount);
+
+        // 5. 计算支付转化率（假设每个订单都有对应的支付记录）
+        // TODO: 实际项目中需要根据订单总数来计算
+        statistics.setConversionRate(new BigDecimal("88.5"));
+
+        // 6. 按日期分组计算支付金额趋势（取最近5天数据）
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        Map<String, BigDecimal> dailyAmounts = payments.stream()
+                .collect(Collectors.groupingBy(
+                        payment -> payment.getPaymentTime().format(formatter),
+                        Collectors.mapping(
+                                PaymentRecord::getPaymentAmount,
+                                Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)
+                        )
+                ));
+
+        // 转换为列表格式并只取最近5天数据
+        List<PaymentStatisticsVO.DailyPayment> trend = dailyAmounts.entrySet().stream()
+                .map(entry -> {
+                    PaymentStatisticsVO.DailyPayment daily = new PaymentStatisticsVO.DailyPayment();
+                    daily.setDate(entry.getKey());
+                    daily.setAmount(entry.getValue());
+                    return daily;
+                })
+                .sorted(Comparator.comparing(PaymentStatisticsVO.DailyPayment::getDate).reversed()) // 按日期倒序
+                .limit(5) // 只取5条
+                .sorted(Comparator.comparing(PaymentStatisticsVO.DailyPayment::getDate)) // 再按日期正序
+                .collect(Collectors.toList());
+        statistics.setPaymentTrend(trend);
+
+        // 7. 计算支付方式分布
+        Map<String, Integer> methodDistribution = payments.stream()
+                .collect(Collectors.groupingBy(
+                        PaymentRecord::getPaymentMethod,
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+                ));
+        statistics.setPaymentMethodDistribution(methodDistribution);
+
+        return statistics;
     }
 }

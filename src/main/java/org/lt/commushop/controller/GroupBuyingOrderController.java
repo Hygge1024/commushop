@@ -96,6 +96,14 @@ public class GroupBuyingOrderController {
                 startTime, endTime));
     }
 
+    @PostMapping("/{orderId}/ship")
+    @ApiOperation("订单发货")
+    public Result<Boolean> shipOrder(
+            @ApiParam(value = "订单ID", required = true)
+            @PathVariable Integer orderId) {
+        return Result.success(orderService.shipOrder(orderId));
+    }
+
     @GetMapping("/statistics")
     @ApiOperation("获取订单统计信息")
     public Result<OrderStatisticsVO> getOrderStatistics() {
