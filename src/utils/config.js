@@ -30,6 +30,29 @@ export const API_ENDPOINTS = {
         CATEGORY_STATS: '/api/dashboard/category-stats'
     },
     USER: {
-        INFO: '/api/userInfo'
-    }
+        INFO: '/api/userInfo',
+        PAGE: `${API_BASE_URL}/api/page`,
+        STATISTICS: `${API_BASE_URL}/api/statistics`,
+    },
+    ACTIVITY: {
+        LIST: '/api/activity/page',
+        CREATE: '/api/activity/create',
+        UPDATE: '/api/activity/update',
+        DELETE: (activityId) => `/api/activity/${activityId}`,
+        DETAIL: '/api/activity/detail',
+        REMOVE_PRODUCT: (activityCode, productId) => `/api/activity/${activityCode}/product/${productId}`,
+        STATISTICS: '/api/activity/statistics'
+    },
+    ORDER: {
+        LIST: '/api/group-buying-order/order/page',
+        // DETAIL: '/api/group-buying-order/order/detail',
+        DELETE: '/api/group-buying-order/order/delete',
+        // 订单统计
+        ORDER_STATISTICS: `${API_BASE_URL}/api/group-buying-order/statistics`,
+    },
+    // 支付管理
+    PAYMENT: {
+        PAGE_DETAILS: `${API_BASE_URL}/api/payment/pageDetails`,
+        STATISTICS: `${API_BASE_URL}/api/payment/statistics`,
+    },
 };

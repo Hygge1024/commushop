@@ -1,37 +1,71 @@
-import React from 'react';
-import { Form, Input, DatePicker, Select, Button, Card, InputNumber, Table } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, DatePicker, Button, Card, InputNumber, Table, message, Modal } from 'antd';
+import { activityService } from '../../services/activityService';
+import { goodsService } from '../../services/goodsService';
+import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
-const { TextArea } = Input;
 
 const CreateActivity = () => {
     const [form] = Form.useForm();
+    const [selectedProducts, setSelectedProducts] = useState([]);
+    const [productModalVisible, setProductModalVisible] = useState(false);
+    const [productList, setProductList] = useState([]);
+    const [productPagination, setProductPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0
+    });
+    const [loading, setLoading] = useState(false);
 
-    const onFinish = (values) => {
-        console.log('提交的表单数据:', values);
+    // 获取商品列表
+    const fetchProducts = async (params = { current: 1, size: 10 }) => {
+        try {
+            setLoading(true);
+            const response = await goodsService.getGoodsList(params);
+            if (response.code === 200) {
+                setProductList(response.data.records);
+                setProductPagination({
+                    current: params.current,
+                    pageSize: params.size,
+                    total: response.data.total
+                });
+            }
+        } catch (error) {
+            message.error('获取商品列表失败');
+            console.error('获取商品列表失败:', error);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
 
     // 商品选择的表格列定义
     const columns = [
         {
             title: '商品ID',
-            dataIndex: 'product_id',
-            key: 'product_id',
+            dataIndex: 'productId',
+            key: 'productId',
         },
         {
             title: '商品名称',
-            dataIndex: 'name',
-            key: 'name',
+            dataIndex: 'productName',
+            key: 'productName',
         },
         {
             title: '商品原始价格',
-            dataIndex: 'originprice',
-            key: 'originprice',
+            dataIndex: 'originalPrice',
+            key: 'originalPrice',
+            render: (price) => `¥${price.toFixed(2)}`
         },
         {
             title: '商品团购价格',
-            dataIndex: 'groupprice',
-            key: 'groupprice',
+            dataIndex: 'groupPrice',
+            key: 'groupPrice',
+            render: (price) => `¥${price.toFixed(2)}`
         },
         {
             title: '库存',
@@ -40,18 +74,44 @@ const CreateActivity = () => {
         }
     ];
 
-    // 示例数据
-    const productData = [
-        {
-            key: '1',
-            product_id: 'P001',
-            name: '示例商品1',
-            originprice: '¥100.00',
-            groupprice: '¥99.00',
-            stock: 100
-        },
-        // 更多商品数据...
-    ];
+    const handleTableChange = (pagination) => {
+        fetchProducts({
+            current: pagination.current,
+            size: pagination.pageSize
+        });
+    };
+
+    const onFinish = async (values) => {
+        if (selectedProducts.length === 0) {
+            message.error('请选择至少一个商品');
+            return;
+        }
+
+        try {
+            const [startTime, endTime] = values.activity_time;
+            const activityData = {
+                activityName: values.activity_name,
+                activityStartTime: startTime.format('YYYY-MM-DDTHH:mm:ss'),
+                activityEndTime: endTime.format('YYYY-MM-DDTHH:mm:ss'),
+                minGroupSize: values.group_size.min,
+                maxGroupSize: values.group_size.max
+            };
+
+            const productIds = selectedProducts.map(product => product.productId);
+            const response = await activityService.createActivity(activityData, productIds);
+            
+            if (response.code === 200) {
+                message.success('活动创建成功');
+                form.resetFields();
+                setSelectedProducts([]);
+            } else {
+                message.error(response.message || '创建失败');
+            }
+        } catch (error) {
+            console.error('创建活动失败:', error);
+            message.error('创建活动失败');
+        }
+    };
 
     return (
         <Card title="创建新活动">
@@ -94,7 +154,7 @@ const CreateActivity = () => {
                         >
                             <InputNumber
                                 style={{ width: 100 }}
-                                min={2}
+                                min={1}
                                 placeholder="最小人数"
                             />
                         </Form.Item>
@@ -110,7 +170,7 @@ const CreateActivity = () => {
                         >
                             <InputNumber
                                 style={{ width: 100 }}
-                                min={2}
+                                min={1}
                                 placeholder="最大人数"
                             />
                         </Form.Item>
@@ -118,23 +178,21 @@ const CreateActivity = () => {
                 </Form.Item>
 
                 <Form.Item
-                    name="products"
                     label="活动商品"
-                    rules={[{ required: true, message: '请选择活动商品' }]}
+                    required
                 >
                     <div>
-                        <Button type="primary" style={{ marginBottom: 16 }}>
+                        <Button 
+                            type="primary" 
+                            style={{ marginBottom: 16 }}
+                            onClick={() => setProductModalVisible(true)}
+                        >
                             选择商品
                         </Button>
                         <Table
                             columns={columns}
-                            dataSource={productData}
-                            rowSelection={{
-                                type: 'checkbox',
-                                onChange: (selectedRowKeys, selectedRows) => {
-                                    console.log('选中的商品:', selectedRows);
-                                }
-                            }}
+                            dataSource={selectedProducts}
+                            rowKey="productId"
                             size="small"
                         />
                     </div>
@@ -146,8 +204,32 @@ const CreateActivity = () => {
                     </Button>
                 </Form.Item>
             </Form>
+
+            <Modal
+                title="选择商品"
+                open={productModalVisible}
+                onOk={() => setProductModalVisible(false)}
+                onCancel={() => setProductModalVisible(false)}
+                width={1000}
+            >
+                <Table
+                    columns={columns}
+                    dataSource={productList}
+                    rowKey="productId"
+                    rowSelection={{
+                        type: 'checkbox',
+                        selectedRowKeys: selectedProducts.map(p => p.productId),
+                        onChange: (_, selectedRows) => {
+                            setSelectedProducts(selectedRows);
+                        }
+                    }}
+                    pagination={productPagination}
+                    onChange={handleTableChange}
+                    loading={loading}
+                />
+            </Modal>
         </Card>
     );
 };
 
-export default CreateActivity; 
+export default CreateActivity;

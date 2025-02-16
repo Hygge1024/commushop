@@ -1,82 +1,189 @@
-import React from 'react';
-import { Card, Row, Col, Statistic, DatePicker, Space } from 'antd';
-import { Line, Pie } from '@ant-design/charts';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Statistic, DatePicker, Button, Space, message, Spin } from 'antd';
+import { MoneyCollectOutlined, TransactionOutlined, PercentageOutlined } from '@ant-design/icons';
+import ReactECharts from 'echarts-for-react';
+import { paymentService } from '../../services/paymentService';
+import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
 
 const PaymentStatistics = () => {
-    // 折线图配置
-    const lineConfig = {
-        data: [
-            { date: '2024-01-01', amount: 3500 },
-            { date: '2024-01-02', amount: 4200 },
-            { date: '2024-01-03', amount: 3800 },
-            { date: '2024-01-04', amount: 5000 },
-            { date: '2024-01-05', amount: 4800 },
-        ],
-        xField: 'date',
-        yField: 'amount',
-        point: {
-            size: 5,
-            shape: 'diamond',
-        },
-        label: {
-            style: {
-                fill: '#aaa',
-            },
-        },
+    const [loading, setLoading] = useState(true);
+    const [statistics, setStatistics] = useState(null);
+    const [dateRange, setDateRange] = useState([
+        dayjs('2024-01-01 00:00:00'),
+        dayjs('2025-03-05 23:59:59')
+    ]);
+
+    useEffect(() => {
+        fetchStatistics();
+    }, []);
+
+    const fetchStatistics = async () => {
+        try {
+            setLoading(true);
+            const response = await paymentService.getPaymentStatistics({
+                startTime: dateRange[0].format('YYYY-MM-DD HH:mm:ss'),
+                endTime: dateRange[1].format('YYYY-MM-DD HH:mm:ss')
+            });
+            
+            if (response.code === 200) {
+                setStatistics(response.data);
+            } else {
+                message.error(response.message || '获取统计数据失败');
+            }
+        } catch (error) {
+            console.error('获取统计数据失败:', error);
+            message.error('获取统计数据失败');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // 饼图配置
-    const pieConfig = {
-        data: [
-            { type: '支付宝', value: 45 },
-            { type: '微信支付', value: 40 },
-            { type: '银行卡', value: 15 },
-        ],
-        angleField: 'value',
-        colorField: 'type',
-        radius: 0.8,
-        label: {
-            position: 'outside',
-            content: ({ type, value, percentage }) =>
-                `${type}: ${(percentage * 100).toFixed(1)}%`,
+    // 支付趋势图表配置
+    const getPaymentTrendOption = () => ({
+        title: {
+            text: '支付金额趋势',
+            left: 'center'
         },
-        interactions: [
-            {
-                type: 'element-active',
+        tooltip: {
+            trigger: 'axis',
+            formatter: (params) => {
+                const data = params[0];
+                return `${data.name}<br/>${data.seriesName}: ¥${data.value.toFixed(2)}`;
+            }
+        },
+        xAxis: {
+            type: 'category',
+            data: statistics?.paymentTrend.map(item => item.date) || [],
+            axisLabel: {
+                interval: 0,
+                rotate: 30
+            }
+        },
+        yAxis: {
+            type: 'value',
+            name: '支付金额(¥)'
+        },
+        series: [{
+            name: '支付金额',
+            type: 'line',
+            data: statistics?.paymentTrend.map(item => item.amount) || [],
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 8,
+            itemStyle: {
+                color: '#1890ff'
             },
-        ],
+            areaStyle: {
+                color: {
+                    type: 'linear',
+                    x: 0,
+                    y: 0,
+                    x2: 0,
+                    y2: 1,
+                    colorStops: [{
+                        offset: 0,
+                        color: 'rgba(24,144,255,0.3)'
+                    }, {
+                        offset: 1,
+                        color: 'rgba(24,144,255,0.1)'
+                    }]
+                }
+            }
+        }]
+    });
+
+    // 支付方式分布图表配置
+    const getPaymentMethodOption = () => ({
+        title: {
+            text: '支付方式分布',
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: '{b}: {c} ({d}%)'
+        },
+        legend: {
+            orient: 'vertical',
+            left: 'left',
+            top: 'middle'
+        },
+        series: [{
+            type: 'pie',
+            radius: ['50%', '70%'],
+            avoidLabelOverlap: false,
+            label: {
+                show: true,
+                position: 'outside',
+                formatter: '{b}: {c}笔'
+            },
+            emphasis: {
+                label: {
+                    show: true,
+                    fontSize: '16',
+                    fontWeight: 'bold'
+                }
+            },
+            data: Object.entries(statistics?.paymentMethodDistribution || {}).map(([method, count]) => ({
+                name: method,
+                value: count,
+                itemStyle: {
+                    color: method === '微信支付' ? '#52c41a' : '#1890ff'
+                }
+            }))
+        }]
+    });
+
+    const handleDateRangeChange = (dates) => {
+        if (dates) {
+            setDateRange(dates);
+        }
     };
+
+    if (loading) {
+        return (
+            <div style={{ textAlign: 'center', padding: '50px' }}>
+                <Spin size="large" />
+            </div>
+        );
+    }
 
     return (
-        <div>
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                {/* 时间范围选择器 */}
-                <Card>
-                    <Space>
-                        <span>选择时间范围：</span>
-                        <RangePicker />
-                    </Space>
-                </Card>
+        <div style={{ padding: '24px' }}>
+            <Card>
+                <Space style={{ marginBottom: '24px' }}>
+                    <RangePicker
+                        showTime
+                        value={dateRange}
+                        onChange={handleDateRangeChange}
+                    />
+                    <Button type="primary" onClick={fetchStatistics}>
+                        查询
+                    </Button>
+                </Space>
 
-                {/* 统计数据卡片 */}
-                <Row gutter={16}>
+                <Row gutter={[24, 24]}>
                     <Col span={6}>
                         <Card>
                             <Statistic
-                                title="今日支付总额"
-                                value={11280}
+                                title="总支付金额"
+                                value={statistics?.totalAmount || 0}
                                 precision={2}
-                                prefix="¥"
+                                prefix={<MoneyCollectOutlined />}
+                                suffix="元"
+                                valueStyle={{ color: '#1890ff' }}
                             />
                         </Card>
                     </Col>
                     <Col span={6}>
                         <Card>
                             <Statistic
-                                title="今日支付笔数"
-                                value={93}
+                                title="支付笔数"
+                                value={statistics?.paymentCount || 0}
+                                prefix={<TransactionOutlined />}
+                                suffix="笔"
+                                valueStyle={{ color: '#52c41a' }}
                             />
                         </Card>
                     </Col>
@@ -84,9 +191,11 @@ const PaymentStatistics = () => {
                         <Card>
                             <Statistic
                                 title="平均支付金额"
-                                value={121.29}
+                                value={statistics?.averageAmount || 0}
                                 precision={2}
-                                prefix="¥"
+                                prefix={<MoneyCollectOutlined />}
+                                suffix="元"
+                                valueStyle={{ color: '#faad14' }}
                             />
                         </Card>
                     </Col>
@@ -94,25 +203,31 @@ const PaymentStatistics = () => {
                         <Card>
                             <Statistic
                                 title="支付转化率"
-                                value={88.5}
+                                value={statistics?.conversionRate || 0}
+                                precision={1}
+                                prefix={<PercentageOutlined />}
                                 suffix="%"
+                                valueStyle={{ color: '#13c2c2' }}
                             />
                         </Card>
                     </Col>
                 </Row>
 
-                {/* 支付趋势图 */}
-                <Card title="支付金额趋势">
-                    <Line {...lineConfig} />
-                </Card>
-
-                {/* 支付方式分布 */}
-                <Card title="支付方式分布">
-                    <Pie {...pieConfig} />
-                </Card>
-            </Space>
+                <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
+                    <Col span={16}>
+                        <Card>
+                            <ReactECharts option={getPaymentTrendOption()} style={{ height: '400px' }} />
+                        </Card>
+                    </Col>
+                    <Col span={8}>
+                        <Card>
+                            <ReactECharts option={getPaymentMethodOption()} style={{ height: '400px' }} />
+                        </Card>
+                    </Col>
+                </Row>
+            </Card>
         </div>
     );
 };
 
-export default PaymentStatistics; 
+export default PaymentStatistics;

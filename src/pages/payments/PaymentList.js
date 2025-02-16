@@ -1,60 +1,182 @@
-import React, { useState } from 'react';
-import { Table, Space, Button, Card, Input, DatePicker, Select, Form, Tag } from 'antd';
-import { SearchOutlined, DeleteOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Table, Space, Button, Card, Input, DatePicker, Select, Form, Modal, Descriptions, message } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import { paymentService } from '../../services/paymentService';
+import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const PaymentList = () => {
     const [form] = Form.useForm();
+    const [loading, setLoading] = useState(false);
+    const [paymentList, setPaymentList] = useState([]);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0
+    });
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [currentPayment, setCurrentPayment] = useState(null);
+
+    useEffect(() => {
+        fetchPayments();
+    }, []);
+
+    // 获取支付列表
+    const fetchPayments = async (params = {}) => {
+        try {
+            setLoading(true);
+            const { dateRange, ...restParams } = params;
+            const queryParams = {
+                ...restParams,
+                current: params.current || pagination.current,
+                size: params.pageSize || pagination.pageSize,
+                startTime: dateRange?.[0]?.format('YYYY-MM-DD HH:mm:ss'),
+                endTime: dateRange?.[1]?.format('YYYY-MM-DD HH:mm:ss')
+            };
+
+            const response = await paymentService.getPaymentList(queryParams);
+            if (response.code === 200) {
+                setPaymentList(response.data.records);
+                setPagination({
+                    current: response.data.current,
+                    pageSize: response.data.size,
+                    total: response.data.total
+                });
+            } else {
+                message.error(response.message || '获取支付列表失败');
+            }
+        } catch (error) {
+            console.error('获取支付列表失败:', error);
+            message.error('获取支付列表失败');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 查看详情
+    const showPaymentDetail = (record) => {
+        setCurrentPayment(record);
+        setIsModalVisible(true);
+    };
+
+    // 重置表单
+    const handleReset = () => {
+        form.resetFields();
+        fetchPayments({
+            current: 1,
+            pageSize: pagination.pageSize
+        });
+    };
+
+    // 表单提交
+    const onFinish = (values) => {
+        fetchPayments({
+            current: 1,
+            ...values
+        });
+    };
+
+    // 表格变化处理
+    const handleTableChange = (pagination, filters, sorter) => {
+        fetchPayments({
+            current: pagination.current,
+            pageSize: pagination.pageSize
+        });
+    };
+
+    // 详情弹窗
+    const PaymentDetailModal = ({ visible, payment, onClose }) => {
+        if (!payment) return null;
+
+        return (
+            <Modal
+                title="支付详细信息"
+                open={visible}
+                onCancel={onClose}
+                footer={[
+                    <Button key="close" onClick={onClose}>
+                        关闭
+                    </Button>
+                ]}
+                width={800}
+            >
+                <Descriptions bordered column={2}>
+                    <Descriptions.Item label="支付ID" span={2}>
+                        {payment.payment.paymentId}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="订单ID">
+                        {payment.order.orderId}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="活动ID">
+                        {payment.activity.activityId}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="支付金额">
+                        ¥{payment.payment.paymentAmount.toFixed(2)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="支付方式">
+                        {payment.payment.paymentMethod}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="支付时间" span={2}>
+                        {dayjs(payment.payment.paymentTime).format('YYYY-MM-DD HH:mm:ss')}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="活动名称" span={2}>
+                        {payment.activity.activityName}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="活动时间" span={2}>
+                        {dayjs(payment.activity.activityStartTime).format('YYYY-MM-DD HH:mm:ss')} 至 {dayjs(payment.activity.activityEndTime).format('YYYY-MM-DD HH:mm:ss')}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="订单数量">
+                        {payment.order.quantity}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="订单创建时间">
+                        {dayjs(payment.order.createTime).format('YYYY-MM-DD HH:mm:ss')}
+                    </Descriptions.Item>
+                </Descriptions>
+            </Modal>
+        );
+    };
 
     // 表格列定义
     const columns = [
         {
             title: '支付ID',
-            dataIndex: 'payment_id',
-            key: 'payment_id',
+            dataIndex: ['payment', 'paymentId'],
+            key: 'paymentId',
             width: 120,
         },
         {
             title: '订单ID',
-            dataIndex: 'order_id',
-            key: 'order_id',
+            dataIndex: ['order', 'orderId'],
+            key: 'orderId',
             width: 120,
         },
         {
             title: '活动ID',
-            dataIndex: 'activity_id',
-            key: 'activity_id',
+            dataIndex: ['activity', 'activityId'],
+            key: 'activityId',
             width: 120,
         },
         {
             title: '支付金额',
-            dataIndex: 'amount',
-            key: 'amount',
+            dataIndex: ['payment', 'paymentAmount'],
+            key: 'paymentAmount',
             width: 120,
             render: (amount) => `¥${amount.toFixed(2)}`,
         },
         {
             title: '支付时间',
-            dataIndex: 'payment_time',
-            key: 'payment_time',
+            dataIndex: ['payment', 'paymentTime'],
+            key: 'paymentTime',
             width: 180,
+            render: (time) => dayjs(time).format('YYYY-MM-DD HH:mm:ss'),
         },
         {
             title: '支付方式',
-            dataIndex: 'payment_method',
-            key: 'payment_method',
+            dataIndex: ['payment', 'paymentMethod'],
+            key: 'paymentMethod',
             width: 120,
-            render: (method) => {
-                const methodConfig = {
-                    alipay: { color: 'blue', text: '支付宝' },
-                    wechat: { color: 'green', text: '微信' },
-                    bank: { color: 'orange', text: '银行卡' }
-                };
-                const { color, text } = methodConfig[method] || { color: 'default', text: method };
-                return <Tag color={color}>{text}</Tag>;
-            },
         },
         {
             title: '操作',
@@ -62,7 +184,7 @@ const PaymentList = () => {
             width: 150,
             render: (_, record) => (
                 <Space size="middle">
-                    <Button type="link" onClick={() => console.log('查看详情', record)}>
+                    <Button type="link" onClick={() => showPaymentDetail(record)}>
                         查看详情
                     </Button>
                 </Space>
@@ -70,89 +192,61 @@ const PaymentList = () => {
         },
     ];
 
-    // 示例数据
-    const data = [
-        {
-            key: '1',
-            payment_id: 'PAY20240101001',
-            order_id: 'ORD20240101001',
-            activity_id: 'ACT001',
-            amount: 299.99,
-            payment_time: '2024-01-01 12:30:00',
-            payment_method: 'alipay',
-        },
-        {
-            key: '2',
-            payment_id: 'PAY20240101002',
-            order_id: 'ORD20240101002',
-            activity_id: 'ACT002',
-            amount: 199.99,
-            payment_time: '2024-01-01 14:20:00',
-            payment_method: 'wechat',
-        },
-    ];
-
-    // 搜索表单提交
-    const onFinish = (values) => {
-        console.log('搜索条件:', values);
-    };
-
     return (
-        <Card title="支付查询">
-            {/* 搜索表单 */}
+        <Card>
             <Form
                 form={form}
                 layout="inline"
                 onFinish={onFinish}
-                style={{ marginBottom: 24 }}
+                style={{ marginBottom: 16 }}
             >
-                <Form.Item name="payment_id" label="支付ID">
+                <Form.Item name="paymentId" label="支付ID">
                     <Input placeholder="请输入支付ID" />
                 </Form.Item>
-                <Form.Item name="order_id" label="订单ID">
+                <Form.Item name="orderId" label="订单ID">
                     <Input placeholder="请输入订单ID" />
                 </Form.Item>
-                <Form.Item name="activity_id" label="活动ID">
+                <Form.Item name="activityId" label="活动ID">
                     <Input placeholder="请输入活动ID" />
                 </Form.Item>
-                <Form.Item name="payment_method" label="支付方式">
-                    <Select style={{ width: 120 }} placeholder="请选择支付方式">
-                        <Option value="alipay">支付宝</Option>
-                        <Option value="wechat">微信</Option>
-                        <Option value="bank">银行卡</Option>
+                <Form.Item name="paymentMethod" label="支付方式">
+                    <Select style={{ width: 120 }} allowClear>
+                        <Option value="微信支付">微信支付</Option>
+                        <Option value="支付宝">支付宝</Option>
                     </Select>
                 </Form.Item>
-                <Form.Item name="date_range" label="支付时间">
+                <Form.Item name="dateRange" label="支付时间">
                     <RangePicker showTime />
                 </Form.Item>
                 <Form.Item>
                     <Space>
                         <Button type="primary" icon={<SearchOutlined />} htmlType="submit">
-                            搜索
+                            查询
                         </Button>
-                        <Button icon={<DeleteOutlined />} onClick={() => form.resetFields()}>
-                            重置
-                        </Button>
+                        <Button onClick={handleReset}>重置</Button>
                     </Space>
                 </Form.Item>
             </Form>
 
-            {/* 支付列表 */}
             <Table
                 columns={columns}
-                dataSource={data}
-                pagination={{
-                    total: data.length,
-                    pageSize: 10,
-                    showTotal: (total) => `共 ${total} 条数据`,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
+                dataSource={paymentList}
+                rowKey={record => record.payment.paymentId}
+                pagination={pagination}
+                onChange={handleTableChange}
+                loading={loading}
+            />
+
+            <PaymentDetailModal
+                visible={isModalVisible}
+                payment={currentPayment}
+                onClose={() => {
+                    setIsModalVisible(false);
+                    setCurrentPayment(null);
                 }}
-                scroll={{ x: 1200 }}
-                bordered
             />
         </Card>
     );
 };
 
-export default PaymentList; 
+export default PaymentList;
