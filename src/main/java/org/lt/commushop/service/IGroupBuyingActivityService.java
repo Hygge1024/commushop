@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
 import org.lt.commushop.domain.Hander.ActivityWithProductsVO;
+import org.lt.commushop.dto.UpdateGroupBuyingActivityDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,4 +48,19 @@ public interface IGroupBuyingActivityService extends IService<GroupBuyingActivit
     Page<ActivityWithProductsVO> getActivityPage(Integer current, Integer size,
                                              String activityCode, String activityName,
                                              LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
+     * 更新团购活动及其关联商品
+     * @param updateDTO 更新请求DTO
+     * @return 更新是否成功
+     */
+    boolean updateGroupBuyingActivity(UpdateGroupBuyingActivityDTO updateDTO);
+
+    /**
+     * 删除活动关联的商品
+     * @param activityCode 活动编码
+     * @param productId 商品ID
+     * @return 删除是否成功
+     */
+    boolean removeActivityProduct(String activityCode, Integer productId);
 }

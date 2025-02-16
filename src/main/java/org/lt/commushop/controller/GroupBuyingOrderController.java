@@ -6,6 +6,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.entity.GroupBuyingOrder;
+import org.lt.commushop.domain.vo.OrderQueryVO;
+import org.lt.commushop.domain.vo.OrderStatisticsVO;
+import org.lt.commushop.dto.OrderQueryDTO;
 import org.lt.commushop.service.IGroupBuyingOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -61,14 +64,41 @@ public class GroupBuyingOrderController {
             @ApiParam(value = "订单状态：1-待支付，2-已支付，3-已取消") @RequestParam(required = false) Integer orderStatus,
             @ApiParam(value = "最小订单金额") @RequestParam(required = false) BigDecimal minAmount,
             @ApiParam(value = "最大订单金额") @RequestParam(required = false) BigDecimal maxAmount,
-            @ApiParam(value = "开始时间", example = "2025-02-07 00:00:00") 
+            @ApiParam(value = "开始时间", example = "2025-02-07 00:00:00")
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
-            @ApiParam(value = "结束时间", example = "2025-02-07 23:59:59") 
+            @ApiParam(value = "结束时间", example = "2025-02-07 23:59:59")
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
-        
+
         return Result.success(orderService.getOrderPage(current, size,
                 userId, activityId, orderStatus,
                 minAmount, maxAmount,
                 startTime, endTime));
+    }
+
+    @ApiOperation(value = "订单分页查询", notes = "支持订单ID、活动名称、用户ID、订单状态、创建时间范围等多条件筛选")
+    @GetMapping("/order/page")
+    public Result<IPage<OrderQueryVO>> getOrderPage(
+            @ApiParam(value = "当前页码", defaultValue = "1") @RequestParam(defaultValue = "1") Integer current,
+            @ApiParam(value = "每页数量", defaultValue = "10") @RequestParam(defaultValue = "10") Integer size,
+            @ApiParam(value = "用户ID") @RequestParam(required = false) Integer userId,
+            @ApiParam(value = "活动名称") @RequestParam(required = false) String activityName,
+            @ApiParam(value = "订单状态：1-待支付，2-已支付，3-已取消") @RequestParam(required = false) Integer orderStatus,
+            @ApiParam(value = "最小订单金额") @RequestParam(required = false) BigDecimal minAmount,
+            @ApiParam(value = "最大订单金额") @RequestParam(required = false) BigDecimal maxAmount,
+            @ApiParam(value = "开始时间", example = "2025-02-07 00:00:00")
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
+            @ApiParam(value = "结束时间", example = "2025-02-07 23:59:59")
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
+
+        return Result.success(orderService.getOrderPage(current, size,
+                userId, activityName, orderStatus,
+                minAmount, maxAmount,
+                startTime, endTime));
+    }
+
+    @GetMapping("/statistics")
+    @ApiOperation("获取订单统计信息")
+    public Result<OrderStatisticsVO> getOrderStatistics() {
+        return Result.success(orderService.getOrderStatistics());
     }
 }

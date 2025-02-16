@@ -62,8 +62,8 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
         // 5. 保存支付记录
         this.save(paymentRecord);
 
-        // 6. 更新订单状态为已支付（状态码2）
-        order.setOrderStatus(2);
+        // 6. 更新订单状态为已支付（状态码3）
+        order.setOrderStatus(3);
         orderService.updateById(order);
 
         return paymentRecord.getPaymentId();
@@ -94,7 +94,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
         // 只查询已支付的订单
         orderWrapper.eq(GroupBuyingOrder::getOrderStatus, 2); // 假设2表示已支付状态
         List<GroupBuyingOrder> userOrders = orderService.list(orderWrapper);
-        
+
         // 如果用户没有已支付的订单，直接返回空分页结果
         if (userOrders.isEmpty()) {
             return page;
@@ -107,7 +107,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
 
         // 4. 构建支付记录查询条件
         LambdaQueryWrapper<PaymentRecord> queryWrapper = new LambdaQueryWrapper<>();
-        
+
         // 4.1 订单ID查询（必须是用户的已支付订单）
         if (orderId != null) {
             // 如果指定了订单ID，验证该订单是否属于当前用户且已支付
@@ -119,7 +119,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
             // 如果没有指定订单ID，则查询用户所有已支付订单的支付记录
             queryWrapper.in(PaymentRecord::getOrderId, orderIds);
         }
-        
+
         // 4.2 支付金额范围查询
         if (minAmount != null) {
             queryWrapper.ge(PaymentRecord::getPaymentAmount, minAmount);
@@ -127,7 +127,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
         if (maxAmount != null) {
             queryWrapper.le(PaymentRecord::getPaymentAmount, maxAmount);
         }
-        
+
         // 4.3 支付时间范围查询
         if (startTime != null) {
             queryWrapper.ge(PaymentRecord::getPaymentTime, startTime);
@@ -135,7 +135,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
         if (endTime != null) {
             queryWrapper.le(PaymentRecord::getPaymentTime, endTime);
         }
-        
+
         // 4.4 按支付时间倒序排序
         queryWrapper.orderByDesc(PaymentRecord::getPaymentTime);
 

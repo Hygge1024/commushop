@@ -1,8 +1,12 @@
 package org.lt.commushop.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.lt.commushop.domain.entity.GroupBuyingOrder;
+import org.lt.commushop.domain.vo.OrderQueryVO;
+import org.lt.commushop.domain.vo.OrderStatisticsVO;
+import org.lt.commushop.dto.OrderQueryDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -56,4 +60,29 @@ public interface IGroupBuyingOrderService extends IService<GroupBuyingOrder> {
                                        Integer orderStatus,
                                        BigDecimal minAmount, BigDecimal maxAmount,
                                        LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
+     * 分页查询订单
+     * @param current 当前页
+     * @param size 每页大小
+     * @param userId 用户ID
+     * @param activityName 活动名称
+     * @param orderStatus 订单状态
+     * @param minAmount 最小金额
+     * @param maxAmount 最大金额
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 分页结果
+     */
+    IPage<OrderQueryVO> getOrderPage(Integer current, Integer size,
+                                   Integer userId, String activityName,
+                                   Integer orderStatus,
+                                   BigDecimal minAmount, BigDecimal maxAmount,
+                                   LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
+     * 获取订单统计信息
+     * @return 订单统计信息
+     */
+    OrderStatisticsVO getOrderStatistics();
 }

@@ -2,25 +2,30 @@ package org.lt.commushop.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
 import org.lt.commushop.domain.entity.GroupBuyingOrder;
 import org.lt.commushop.domain.entity.ActivityIncludeProduct;
 import org.lt.commushop.domain.entity.Product;
+import org.lt.commushop.domain.vo.OrderQueryVO;
+import org.lt.commushop.domain.vo.OrderStatisticsVO;
+import org.lt.commushop.dto.OrderQueryDTO;
 import org.lt.commushop.exception.BusinessException;
 import org.lt.commushop.mapper.GroupBuyingOrderMapper;
 import org.lt.commushop.mapper.ActivityIncludeProductMapper;
 import org.lt.commushop.service.IGroupBuyingActivityService;
 import org.lt.commushop.service.IProductService;
 import org.lt.commushop.service.IGroupBuyingOrderService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -200,4 +205,216 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
         // 4. 执行分页查询
         return this.page(page, queryWrapper);
     }
+
+    @Override
+    public IPage<OrderQueryVO> getOrderPage(Integer current, Integer size,
+                                          Integer userId, String activityName,
+                                          Integer orderStatus,
+                                          BigDecimal minAmount, BigDecimal maxAmount,
+                                          LocalDateTime startTime, LocalDateTime endTime) {
+        // 1. 创建分页对象
+        Page<GroupBuyingOrder> page = new Page<>(current, size);
+
+        // 2. 构建查询条件
+        LambdaQueryWrapper<GroupBuyingOrder> orderWrapper = new LambdaQueryWrapper<>();
+
+        // 3. 如果有活动名称，先查询活动ID列表
+        if (StringUtils.isNotBlank(activityName)) {
+            LambdaQueryWrapper<GroupBuyingActivity> activityWrapper = new LambdaQueryWrapper<>();
+            activityWrapper.like(GroupBuyingActivity::getActivityName, activityName);
+            List<GroupBuyingActivity> activities = activityService.list(activityWrapper);
+            if (!activities.isEmpty()) {
+                List<Integer> activityIds = activities.stream()
+                        .map(GroupBuyingActivity::getActivityId)
+                        .collect(Collectors.toList());
+                orderWrapper.in(GroupBuyingOrder::getActivityId, activityIds);
+            } else {
+                // 如果没找到匹配的活动，返回空结果
+                return new Page<>(current, size, 0);
+            }
+        }
+
+        // 4. 添加其他查询条件
+        if (userId != null) {
+            orderWrapper.eq(GroupBuyingOrder::getUserId, userId);
+        }
+        if (orderStatus != null) {
+            orderWrapper.eq(GroupBuyingOrder::getOrderStatus, orderStatus);
+        }
+        if (minAmount != null) {
+            orderWrapper.ge(GroupBuyingOrder::getOrderAmount, minAmount);
+        }
+        if (maxAmount != null) {
+            orderWrapper.le(GroupBuyingOrder::getOrderAmount, maxAmount);
+        }
+        if (startTime != null) {
+            orderWrapper.ge(GroupBuyingOrder::getCreateTime, startTime);
+        }
+        if (endTime != null) {
+            orderWrapper.le(GroupBuyingOrder::getCreateTime, endTime);
+        }
+        orderWrapper.orderByDesc(GroupBuyingOrder::getCreateTime);
+
+        // 5. 查询订单
+        IPage<GroupBuyingOrder> orderPage = this.page(page, orderWrapper);
+
+        // 6. 转换为VO对象
+        IPage<OrderQueryVO> resultPage = new Page<>(current, size, orderPage.getTotal());
+        List<OrderQueryVO> voList = new ArrayList<>();
+
+        // 7. 获取所有相关的活动ID
+        Set<Integer> activityIds = orderPage.getRecords().stream()
+                .map(GroupBuyingOrder::getActivityId)
+                .collect(Collectors.toSet());
+
+        // 8. 批量查询活动信息和关联的商品
+        Map<Integer, GroupBuyingActivity> activityMap = new HashMap<>();
+        Map<Integer, List<Product>> activityProductsMap = new HashMap<>();
+
+        if (!activityIds.isEmpty()) {
+            // 查询活动信息
+            LambdaQueryWrapper<GroupBuyingActivity> activityWrapper = new LambdaQueryWrapper<>();
+            activityWrapper.in(GroupBuyingActivity::getActivityId, activityIds);
+            List<GroupBuyingActivity> activities = activityService.list(activityWrapper);
+            activityMap = activities.stream()
+                    .collect(Collectors.toMap(GroupBuyingActivity::getActivityId, activity -> activity));
+
+            // 获取所有活动编码
+            Set<String> activityCodes = activities.stream()
+                    .map(GroupBuyingActivity::getActivityCode)
+                    .collect(Collectors.toSet());
+
+            // 查询活动关联的商品
+            LambdaQueryWrapper<ActivityIncludeProduct> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.in(ActivityIncludeProduct::getPActivityCode, activityCodes);
+            List<ActivityIncludeProduct> activityProducts = activityIncludeProductMapper.selectList(productWrapper);
+
+            // 获取所有商品ID
+            Set<Integer> productIds = activityProducts.stream()
+                    .map(ActivityIncludeProduct::getProductId)
+                    .collect(Collectors.toSet());
+
+            // 批量查询商品信息
+            Map<Integer, Product> productMap;
+            if (!productIds.isEmpty()) {
+                LambdaQueryWrapper<Product> pWrapper = new LambdaQueryWrapper<>();
+                pWrapper.in(Product::getProductId, productIds);
+                List<Product> products = productService.list(pWrapper);
+                productMap = products.stream()
+                        .collect(Collectors.toMap(Product::getProductId, p -> p));
+            } else {
+                productMap = new HashMap<>();
+            }
+
+            // 创建活动编码到活动ID的映射
+            Map<String, Integer> codeToIdMap = activities.stream()
+                    .collect(Collectors.toMap(GroupBuyingActivity::getActivityCode, GroupBuyingActivity::getActivityId));
+
+            // 按活动编码分组商品
+            Map<String, List<ActivityIncludeProduct>> groupedProducts = activityProducts.stream()
+                    .collect(Collectors.groupingBy(ActivityIncludeProduct::getPActivityCode));
+
+            // 构建活动-商品映射
+            groupedProducts.forEach((activityCode, relations) -> {
+                Integer activityId = codeToIdMap.get(activityCode);
+                if (activityId != null) {
+                    List<Product> products = relations.stream()
+                            .map(relation -> productMap.get(relation.getProductId()))
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+                    activityProductsMap.put(activityId, products);
+                }
+            });
+        }
+
+        // 9. 组装VO对象
+        for (GroupBuyingOrder order : orderPage.getRecords()) {
+            OrderQueryVO vo = new OrderQueryVO();
+            vo.setOrder(order);
+            Integer activityId = order.getActivityId();
+            vo.setActivity(activityMap.get(activityId));
+            vo.setProducts(activityProductsMap.getOrDefault(activityId, new ArrayList<>()));
+            voList.add(vo);
+        }
+
+        resultPage.setRecords(voList);
+        return resultPage;
+    }
+
+    @Override
+    public OrderStatisticsVO getOrderStatistics() {
+        OrderStatisticsVO statistics = new OrderStatisticsVO();
+
+        // 1. 查询所有未删除的订单
+        LambdaQueryWrapper<GroupBuyingOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GroupBuyingOrder::getIsDeleted, 0);
+        List<GroupBuyingOrder> orders = this.list(wrapper);
+
+        // 2. 计算总订单数
+        statistics.setTotalOrders((long) orders.size());
+
+        // 3. 计算总金额
+        BigDecimal totalAmount = orders.stream()
+                .map(GroupBuyingOrder::getOrderAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        statistics.setTotalAmount(totalAmount);
+
+        // 4. 计算下单用户数
+        long uniqueUsers = orders.stream()
+                .map(GroupBuyingOrder::getUserId)
+                .distinct()
+                .count();
+        statistics.setUniqueUsers(uniqueUsers);
+
+        // 5. 计算订单趋势（按周几分组）
+        Map<String, List<GroupBuyingOrder>> dailyOrders = orders.stream()
+                .collect(Collectors.groupingBy(order -> {
+                    int dayOfWeek = order.getCreateTime().getDayOfWeek().getValue(); // 1-7
+                    return "周" + CHINESE_NUMBERS[dayOfWeek - 1];
+                }));
+
+        // 计算每日订单数
+        Map<String, Long> dailyOrderCounts = new LinkedHashMap<>(); // 保持顺序
+        Map<String, BigDecimal> dailyOrderAmounts = new LinkedHashMap<>();
+
+        // 确保所有天都有数据，即使是0
+        for (int i = 0; i < 7; i++) {
+            String day = "周" + CHINESE_NUMBERS[i];
+            List<GroupBuyingOrder> dayOrders = dailyOrders.getOrDefault(day, Collections.emptyList());
+
+            // 订单数
+            dailyOrderCounts.put(day, (long) dayOrders.size());
+
+            // 订单金额
+            BigDecimal dayAmount = dayOrders.stream()
+                    .map(GroupBuyingOrder::getOrderAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            dailyOrderAmounts.put(day, dayAmount);
+        }
+
+        statistics.setDailyOrderCounts(dailyOrderCounts);
+        statistics.setDailyOrderAmounts(dailyOrderAmounts);
+
+        // 6. 计算订单状态分布
+        Map<Integer, Long> statusCounts = orders.stream()
+                .collect(Collectors.groupingBy(
+                        GroupBuyingOrder::getOrderStatus,
+                        Collectors.counting()
+                ));
+
+        // 确保所有状态都有数据，即使是0
+        Map<Integer, Long> allStatusCounts = new HashMap<>();
+        for (int status = 1; status <= 5; status++) {
+            allStatusCounts.put(status, statusCounts.getOrDefault(status, 0L));
+        }
+
+        statistics.setOrderStatusCounts(allStatusCounts);
+
+        return statistics;
+    }
+
+    // 用于转换周几的数字
+    private static final String[] CHINESE_NUMBERS = {"一", "二", "三", "四", "五", "六", "日"};
 }

@@ -7,6 +7,7 @@ import org.lt.commushop.domain.Hander.ActivityWithProductsVO;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
 import org.lt.commushop.domain.entity.ActivityIncludeProduct;
 import org.lt.commushop.domain.entity.Product;
+import org.lt.commushop.dto.UpdateGroupBuyingActivityDTO;
 import org.lt.commushop.mapper.GroupBuyingActivityMapper;
 import org.lt.commushop.mapper.ActivityIncludeProductMapper;
 import org.lt.commushop.service.IActivityIncludeProductService;
@@ -166,7 +167,7 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
 
         // 2. 构建查询条件
         LambdaQueryWrapper<GroupBuyingActivity> queryWrapper = new LambdaQueryWrapper<>();
-        
+
         // 2.0 过滤已删除的活动（isDeleted = 1）
         queryWrapper.ne(GroupBuyingActivity::getIsDeleted, 1);
 
@@ -223,5 +224,99 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
 
         voPage.setRecords(voList);
         return voPage;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeActivityProduct(String activityCode, Integer productId) {
+        if (StringUtils.isEmpty(activityCode)) {
+            throw new BusinessException("删除活动商品失败：活动编码不能为空");
+        }
+        if (productId == null) {
+            throw new BusinessException("删除活动商品失败：商品ID不能为空");
+        }
+
+        // 1. 检查活动是否存在
+        LambdaQueryWrapper<GroupBuyingActivity> activityWrapper = new LambdaQueryWrapper<>();
+        activityWrapper.eq(GroupBuyingActivity::getActivityCode, activityCode)
+                .ne(GroupBuyingActivity::getIsDeleted, 1);
+        if (this.count(activityWrapper) == 0) {
+            throw new BusinessException("删除活动商品失败：活动不存在或已删除");
+        }
+
+        // 2. 检查商品关联是否存在
+        LambdaQueryWrapper<ActivityIncludeProduct> productWrapper = new LambdaQueryWrapper<>();
+        productWrapper.eq(ActivityIncludeProduct::getPActivityCode, activityCode)
+                .eq(ActivityIncludeProduct::getProductId, productId);
+        if (activityIncludeProductMapper.selectCount(productWrapper) == 0) {
+            throw new BusinessException("删除活动商品失败：该活动未关联此商品");
+        }
+
+        // 3. 删除商品关联
+        return activityIncludeProductMapper.delete(productWrapper) > 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateGroupBuyingActivity(UpdateGroupBuyingActivityDTO updateDTO) {
+        if (updateDTO == null) {
+            throw new BusinessException("更新团购活动失败：更新信息不能为空");
+        }
+
+        // 1. 检查活动是否存在
+        GroupBuyingActivity existingActivity = this.getById(updateDTO.getActivityId());
+        if (existingActivity == null || existingActivity.getIsDeleted() == 1) {
+            throw new BusinessException("更新团购活动失败：活动不存在");
+        }
+
+        // 2. 检查活动名称是否重复（排除自身）
+        if (!StringUtils.isEmpty(updateDTO.getActivityName())
+            && !updateDTO.getActivityName().equals(existingActivity.getActivityName())) {
+            LambdaQueryWrapper<GroupBuyingActivity> nameCheckWrapper = new LambdaQueryWrapper<>();
+            nameCheckWrapper.eq(GroupBuyingActivity::getActivityName, updateDTO.getActivityName())
+                    .ne(GroupBuyingActivity::getActivityId, updateDTO.getActivityId())
+                    .ne(GroupBuyingActivity::getIsDeleted, 1);
+            if (this.count(nameCheckWrapper) > 0) {
+                throw new BusinessException("更新团购活动失败：活动名称已存在");
+            }
+        }
+
+        // 3. 检查新增商品是否都存在
+        if (updateDTO.getProductIds() != null && !updateDTO.getProductIds().isEmpty()) {
+            for (Integer productId : updateDTO.getProductIds()) {
+                if (!productService.checkProductExists(productId)) {
+                    throw new BusinessException("更新团购活动失败：商品不存在，商品ID: " + productId);
+                }
+            }
+
+            // 4. 添加新的商品关联（如果商品关联已存在则跳过）
+            for (Integer productId : updateDTO.getProductIds()) {
+                LambdaQueryWrapper<ActivityIncludeProduct> existWrapper = new LambdaQueryWrapper<>();
+                existWrapper.eq(ActivityIncludeProduct::getPActivityCode, existingActivity.getActivityCode())
+                        .eq(ActivityIncludeProduct::getProductId, productId);
+                if (activityIncludeProductMapper.selectCount(existWrapper) == 0) {
+                    ActivityIncludeProduct aip = new ActivityIncludeProduct();
+                    aip.setPActivityCode(existingActivity.getActivityCode());
+                    aip.setProductId(productId);
+                    activityIncludeProductMapper.insert(aip);
+                }
+            }
+        }
+
+        // 5. 更新活动基本信息
+        GroupBuyingActivity activity = new GroupBuyingActivity();
+        activity.setActivityId(updateDTO.getActivityId());
+        activity.setActivityName(updateDTO.getActivityName());
+        activity.setActivityStartTime(updateDTO.getActivityStartTime());
+        activity.setActivityEndTime(updateDTO.getActivityEndTime());
+        activity.setMinGroupSize(updateDTO.getMinGroupSize());
+        activity.setMaxGroupSize(updateDTO.getMaxGroupSize());
+
+        boolean updated = this.updateById(activity);
+        if (!updated) {
+            throw new BusinessException("更新团购活动失败：更新活动基本信息失败");
+        }
+
+        return true;
     }
 }
