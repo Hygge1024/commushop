@@ -21,6 +21,7 @@ import PrivateRoute from './components/PrivateRoute';
 // 导入页面组件
 import Dashboard from './pages/Dashboard';
 import GoodsList from './pages/goods/GoodsList';//
+import CategoryList from './pages/categories/CategoryList';
 import Activities from './pages/Activities';//
 import Orders from './pages/Orders';//
 import Payments from './pages/Payments';//
@@ -92,8 +93,11 @@ function App() {
 
                   {/* 商品管理子菜单 */}
                   <Menu.SubMenu key="sub2" icon={<ShoppingOutlined />} title="商品管理">
-                    <Menu.Item key="2">
+                    <Menu.Item key="2-1">
                       <Link to="/goods/list">商品查询</Link>
+                    </Menu.Item>
+                    <Menu.Item key="2-2">
+                      <Link to="/goods/categories">类别管理</Link>
                     </Menu.Item>
                   </Menu.SubMenu>
 
@@ -177,6 +181,7 @@ function App() {
                     <Routes>
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/goods/list" element={<GoodsList />} />
+                      <Route path="/goods/categories" element={<CategoryList />} />
                       <Route path="/activities/list" element={<ActivityList />} />
                       <Route path="/activities/create" element={<CreateActivity />} />
                       <Route path="/activities/statistics" element={<ActivityStatistics />} />
@@ -199,6 +204,7 @@ function App() {
         }>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="goods/list" element={<GoodsList />} />
+          <Route path="goods/categories" element={<CategoryList />} />
           <Route path="activities/list" element={<ActivityList />} />
           <Route path="activities/create" element={<CreateActivity />} />
           <Route path="activities/statistics" element={<ActivityStatistics />} />

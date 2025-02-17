@@ -21,7 +21,11 @@ export const API_ENDPOINTS = {
         UPDATE_IMAGE: '/api/product/update-image',
     },
     CATEGORY: {
+        ALL: '/api/category/all',
         ACTIVE: '/api/category/active',
+        ADD: '/api/category/add',
+        UPDATE: 'api/category/update',
+        DELETE: (categoryId) => `api/category/delete/${categoryId}`
     },
     DASHBOARD: {
         OVERVIEW: '/api/dashboard/overview',

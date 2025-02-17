@@ -153,9 +153,9 @@ const PaymentList = () => {
             width: 120,
         },
         {
-            title: '活动ID',
-            dataIndex: ['activity', 'activityId'],
-            key: 'activityId',
+            title: '活动名称',
+            dataIndex: ['activity', 'activityName'],
+            key: 'activityName',
             width: 120,
         },
         {
@@ -206,8 +206,8 @@ const PaymentList = () => {
                 <Form.Item name="orderId" label="订单ID">
                     <Input placeholder="请输入订单ID" />
                 </Form.Item>
-                <Form.Item name="activityId" label="活动ID">
-                    <Input placeholder="请输入活动ID" />
+                <Form.Item name="activityName" label="活动名称">
+                    <Input placeholder="请输入活动名称" />
                 </Form.Item>
                 <Form.Item name="paymentMethod" label="支付方式">
                     <Select style={{ width: 120 }} allowClear>

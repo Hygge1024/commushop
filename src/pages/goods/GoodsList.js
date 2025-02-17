@@ -29,6 +29,7 @@ const GoodsList = () => {
     maxOriginalPrice: '',
     minGroupPrice: '',
     maxGroupPrice: '',
+    categoryId: ''
   });
   const [isModalVisible, setIsModalVisible] = useState(false);// 模态框可见性，初始为 false
   const [form] = Form.useForm();// 创建 Ant Design 表单实例
@@ -36,6 +37,7 @@ const GoodsList = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [editFileList, setEditFileList] = useState([]);
 
   // 使用 useRef 来存储最新的 searchParams，避免闭包问题
   const searchParamsRef = useRef(searchParams);// 创建一个 ref 来存储 searchParams
@@ -156,6 +158,7 @@ const GoodsList = () => {
         maxOriginalPrice: currentSearchParams.maxOriginalPrice,
         minGroupPrice: currentSearchParams.minGroupPrice,
         maxGroupPrice: currentSearchParams.maxGroupPrice,
+        categoryId: currentSearchParams.categoryId
       });
 
       console.log('API Response:', response);
@@ -187,19 +190,19 @@ const GoodsList = () => {
   }, []);
 
   // 获取商品分类数据
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = async () => {
     try {
-      const response = await categoryService.getActiveCategories();
+      const response = await categoryService.getAllCategories();
       if (response.data) {
         setCategories(response.data);
       }
     } catch (error) {
-      console.error('Fetch categories error:', error);
       message.error('获取商品分类失败');
+      console.error('Failed to fetch categories:', error);
     }
-  }, []);
+  };
 
-  // 只在组件挂载时获取一次数据
+  // 在组件挂载时获取一次数据
   useEffect(() => {
     fetchData();// 调用 fetchData 函数获取数据
   }, [fetchData]);// 依赖项为 fetchData
@@ -207,7 +210,7 @@ const GoodsList = () => {
   // 在组件挂载时获取分类数据
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+  }, []);
 
   const handleSearch = () => {
     fetchData({ current: 1 });
@@ -221,6 +224,7 @@ const GoodsList = () => {
       maxOriginalPrice: '',
       minGroupPrice: '',
       maxGroupPrice: '',
+      categoryId: ''
     });
     fetchData({ current: 1 });// 调用 fetchData 函数，并设置当前页码为 1
   };
@@ -321,10 +325,46 @@ const GoodsList = () => {
     }
   };
 
+  const handleImageChange = (info) => {
+    const { fileList } = info;
+    setEditFileList(fileList);
+    
+    if (fileList.length > 0) {
+      const file = fileList[0].originFileObj;
+      if (file instanceof File) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImageFile({
+            file: file,
+            previewUrl: e.target.result
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      setImageFile(null);
+    }
+  };
+
   const handleUpdateSubmit = async (values) => {
-    // console.log("提交的表单数据:", values);
     try {
-      // 准备更新数据，包含所有必要字段
+      // 如果有新的图片，先更新图片
+      if (imageFile?.file) {
+        const formData = new FormData();
+        formData.append('file', imageFile.file);
+        const imageResponse = await goodsService.updateProductImage(values.productId, formData);
+        if (imageResponse.code === 200) {
+          // 更新当前商品的图片URL
+          setCurrentProduct(prev => ({
+            ...prev,
+            imageUrl: imageResponse.data.image_url
+          }));
+        } else {
+          throw new Error(imageResponse.message || '更新图片失败');
+        }
+      }
+
+      // 准备更新基本信息的数据
       const updateData = {
         productId: values.productId,
         productName: values.productName || currentProduct.productName,
@@ -336,22 +376,14 @@ const GoodsList = () => {
           .map(categoryId => ({ categoryId }))
       };
 
-      // console.log('发送到后端的数据:', updateData);
-
       // 更新商品基本信息
       const response = await goodsService.updateGoods(updateData);
-      
-      // 如果有新的图片，则更新图片
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        await goodsService.updateProductImage(values.productId, formData);
-      }
 
-      if (response.success) {
+      if (response.code === 200) {
         message.success('商品更新成功');
         setEditModalVisible(false);
         setImageFile(null);
+        setEditFileList([]);
         form.resetFields();
         fetchData(); // 刷新列表
       } else {
@@ -359,13 +391,7 @@ const GoodsList = () => {
       }
     } catch (error) {
       console.error('更新错误:', error);
-      message.error(error.response?.data?.message || '更新商品时发生错误');
-    }
-  };
-
-  const handleImageChange = (info) => {
-    if (info.file) {
-      setImageFile(info.file.originFileObj);
+      message.error(error.message || '更新商品时发生错误');
     }
   };
 
@@ -376,10 +402,10 @@ const GoodsList = () => {
       onCancel={() => {
         setEditModalVisible(false);
         setImageFile(null);
+        setEditFileList([]);
         form.resetFields();
       }}
       onOk={() => {
-        console.log('点击确认按钮');
         form.submit();
       }}
       width={720}
@@ -470,49 +496,68 @@ const GoodsList = () => {
         >
           <Upload
             accept="image/*"
+            fileList={editFileList}
             beforeUpload={() => false}
             onChange={handleImageChange}
             maxCount={1}
-            showUploadList={true}
+            showUploadList={{
+              showPreviewIcon: true,
+              showRemoveIcon: true,
+              showDownloadIcon: false
+            }}
+            listType="picture-card"
           >
-            <Button icon={<UploadOutlined />}>选择新图片</Button>
+            {editFileList.length === 0 && (
+              <div>
+                <UploadOutlined />
+                <div style={{ marginTop: 8 }}>选择图片</div>
+              </div>
+            )}
           </Upload>
-          {currentProduct?.image_url && (
-            <img 
-              src={currentProduct.image_url} 
-              alt="当前商品图片" 
-              style={{ 
-                marginTop: '8px', 
-                maxWidth: '200px', 
-                maxHeight: '200px' 
-              }} 
-            />
+          {!imageFile?.previewUrl && currentProduct?.imageUrl && (
+            <div style={{ marginTop: '8px' }}>
+              <span>当前图片：</span>
+              <img 
+                src={currentProduct.imageUrl}
+                alt="当前商品图片" 
+                style={{ 
+                  maxWidth: '200px', 
+                  maxHeight: '200px',
+                  objectFit: 'cover',
+                  borderRadius: '4px',
+                  marginTop: '8px'
+                }} 
+              />
+            </div>
           )}
         </Form.Item>
       </Form>
     </Modal>
   );
 
+  const handleSearchParamChange = (key, value) => {
+    setSearchParams(prev => ({ ...prev, [key]: value }));
+  };
+
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '16px' }}>
         <Space wrap>
           <Input
-            placeholder="请输入商品名称"
+            placeholder="商品名称"
             value={searchParams.productName}
-            onChange={(e) => setSearchParams({ ...searchParams, productName: e.target.value })}
+            onChange={(e) => handleSearchParamChange('productName', e.target.value)}
             style={{ width: 200 }}
           />
           <Select
-            placeholder="商品类型" // 选择框的占位符
-            value={searchParams.productType}// 当前选中的值
-            onChange={(value) => setSearchParams({ ...searchParams, productType: value })}// 选择值变化时的回调函数
+            placeholder="选择分类"
+            value={searchParams.categoryId}
+            onChange={(value) => handleSearchParamChange('categoryId', value)}
             style={{ width: 200 }}
             allowClear
           >
-            <Option value="">全部</Option>
             {categories.map(category => (
-              <Option key={category.categoryId} value={category.categoryName}>
+              <Option key={category.categoryId} value={category.categoryId}>
                 {category.categoryName}
               </Option>
             ))}
@@ -521,13 +566,13 @@ const GoodsList = () => {
             <Input
               placeholder="最低原价"
               value={searchParams.minOriginalPrice}
-              onChange={(e) => setSearchParams({ ...searchParams, minOriginalPrice: e.target.value })}
+              onChange={(e) => handleSearchParamChange('minOriginalPrice', e.target.value)}
               style={{ width: 120 }}
             />
             <Input
               placeholder="最高原价"
               value={searchParams.maxOriginalPrice}
-              onChange={(e) => setSearchParams({ ...searchParams, maxOriginalPrice: e.target.value })}
+              onChange={(e) => handleSearchParamChange('maxOriginalPrice', e.target.value)}
               style={{ width: 120 }}
             />
           </Space>
@@ -535,13 +580,13 @@ const GoodsList = () => {
             <Input
               placeholder="最低团购价"
               value={searchParams.minGroupPrice}
-              onChange={(e) => setSearchParams({ ...searchParams, minGroupPrice: e.target.value })}
+              onChange={(e) => handleSearchParamChange('minGroupPrice', e.target.value)}
               style={{ width: 120 }}
             />
             <Input
               placeholder="最高团购价"
               value={searchParams.maxGroupPrice}
-              onChange={(e) => setSearchParams({ ...searchParams, maxGroupPrice: e.target.value })}
+              onChange={(e) => handleSearchParamChange('maxGroupPrice', e.target.value)}
               style={{ width: 120 }}
             />
           </Space>

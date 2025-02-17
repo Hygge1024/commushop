@@ -5,7 +5,7 @@ export const paymentService = {
     // 获取支付列表
     getPaymentList: async (params) => {
         try {
-            const { current, size, paymentId, orderId, activityId, paymentMethod, startTime, endTime } = params;
+            const { current, size, paymentId, orderId, activityName, paymentMethod, startTime, endTime } = params;
             const queryParams = new URLSearchParams();
             
             // 添加分页参数
@@ -15,7 +15,7 @@ export const paymentService = {
             // 添加其他查询参数
             if (paymentId) queryParams.append('paymentId', paymentId);
             if (orderId) queryParams.append('orderId', orderId);
-            if (activityId) queryParams.append('activityId', activityId);
+            if (activityName) queryParams.append('activityName', activityName);
             if (paymentMethod) queryParams.append('paymentMethod', paymentMethod);
             if (startTime) queryParams.append('startTime', startTime);
             if (endTime) queryParams.append('endTime', endTime);
