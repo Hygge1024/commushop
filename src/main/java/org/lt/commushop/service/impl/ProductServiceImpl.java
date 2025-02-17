@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -50,14 +51,36 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             BigDecimal minOriginalPrice,
             BigDecimal maxOriginalPrice,
             BigDecimal minGroupPrice,
-            BigDecimal maxGroupPrice) {
+            BigDecimal maxGroupPrice,
+            Integer categoryId) {
         // 创建分页对象
         Page<Product> page = new Page<>(current, size);
+
+        // 如果有categoryId，先获取该类别下的所有商品ID
+        List<Integer> productIds = null;
+        if (categoryId != null) {
+            LambdaQueryWrapper<ProductCategoryRelationship> relationWrapper = new LambdaQueryWrapper<>();
+            relationWrapper.eq(ProductCategoryRelationship::getCategoryId, categoryId);
+            List<ProductCategoryRelationship> relationships = productCategoryRelationshipMapper.selectList(relationWrapper);
+            // 如果该类别下没有商品，直接返回空页
+            // 如果该类别下没有商品，直接返回空页
+            if (relationships.isEmpty()) {
+                return page;
+            }
+            productIds = relationships.stream()
+                    .map(ProductCategoryRelationship::getProductId)
+                    .collect(Collectors.toList());
+        }
 
         // 构建查询条件
         LambdaQueryWrapper<Product> wrapper = buildQueryWrapper(
                 productName, minOriginalPrice, maxOriginalPrice,
                 minGroupPrice, maxGroupPrice);
+
+        // 如果有categoryId且找到了对应的商品ID，添加商品ID条件
+        if (productIds != null) {
+            wrapper.in(Product::getProductId, productIds);
+        }
 
         // 执行查询
         IPage<Product> productPage = baseMapper.selectPage(page, wrapper);

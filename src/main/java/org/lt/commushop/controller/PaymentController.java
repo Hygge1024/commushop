@@ -63,20 +63,19 @@ public class PaymentController {
     @GetMapping("/pageDetails")
     @ApiOperation("分页查询支付记录")
     public Result<IPage<PaymentQueryVO>> getPaymentPage(
-            @ApiParam(value = "当前页码", required = true) @RequestParam Integer current,
-            @ApiParam(value = "每页大小", required = true) @RequestParam Integer size,
-            @ApiParam(value = "支付ID") @RequestParam(required = false) Integer paymentId,
-            @ApiParam(value = "订单ID") @RequestParam(required = false) Integer orderId,
-            @ApiParam(value = "活动ID") @RequestParam(required = false) Integer activityId,
-            @ApiParam(value = "支付方式") @RequestParam(required = false) String paymentMethod,
-            @ApiParam(value = "开始时间", example = "2025-02-07 00:00:00")
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
-            @ApiParam(value = "结束时间", example = "2025-02-07 23:59:59")
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
+            @RequestParam(value = "current", defaultValue = "1") Integer current,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "paymentId", required = false) Integer paymentId,
+            @RequestParam(value = "orderId", required = false) Integer orderId,
+            @RequestParam(value = "activityName", required = false) String activityName,
+            @RequestParam(value = "paymentMethod", required = false) String paymentMethod,
+            @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
+            @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
 
-        return Result.success(paymentService.getPaymentPage(current, size,
-                paymentId, orderId, activityId, paymentMethod,
-                startTime, endTime));
+        IPage<PaymentQueryVO> page = paymentService.getPaymentdetailsPage(
+                current, size, paymentId, orderId, activityName, paymentMethod, startTime, endTime);
+        
+        return Result.success(page);
     }
     @GetMapping("/statistics")
     @ApiOperation("获取支付统计数据")

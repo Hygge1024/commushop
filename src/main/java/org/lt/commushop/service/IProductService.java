@@ -26,6 +26,7 @@ public interface IProductService extends IService<Product> {
      * @param maxOriginalPrice 最大原价
      * @param minGroupPrice    最小团购价
      * @param maxGroupPrice    最大团购价
+     * @param categoryId       商品分类ID
      * @return 分页结果
      */
     IPage<Product> getProductPage(
@@ -35,7 +36,8 @@ public interface IProductService extends IService<Product> {
             BigDecimal minOriginalPrice,
             BigDecimal maxOriginalPrice,
             BigDecimal minGroupPrice,
-            BigDecimal maxGroupPrice);
+            BigDecimal maxGroupPrice,
+            Integer categoryId);
 
     /**
      * 根据商品ID获取商品详情

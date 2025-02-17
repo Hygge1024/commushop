@@ -43,4 +43,6 @@ public class Category implements Serializable {
     @TableField(typeHandler = LocalDateTimeTypeHandler.class)
     private LocalDateTime createdAt;
 
+    private Integer isDeleted;
+
 }

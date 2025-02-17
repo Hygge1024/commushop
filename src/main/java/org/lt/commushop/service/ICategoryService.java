@@ -17,5 +17,7 @@ public interface ICategoryService extends IService<Category> {
     List<Category> getAllCategories();
     List<Category> getAllCategoriesActive();
     Category addCategory(Category category);
+    Category updateCategory(Category category);
+    void deleteCategory(Integer categoryId);
 
 }

@@ -44,10 +44,11 @@ public class ProductController {
             @ApiParam(value = "最低原价") @RequestParam(required = false) BigDecimal minOriginalPrice,
             @ApiParam(value = "最高原价") @RequestParam(required = false) BigDecimal maxOriginalPrice,
             @ApiParam(value = "最低团购价") @RequestParam(required = false) BigDecimal minGroupPrice,
-            @ApiParam(value = "最高团购价") @RequestParam(required = false) BigDecimal maxGroupPrice) {
+            @ApiParam(value = "最高团购价") @RequestParam(required = false) BigDecimal maxGroupPrice,
+            @ApiParam(value = "类别ID") @RequestParam(required = false) Integer categoryId) {
         return Result.success(productService.getProductPage(current, size,
                 productName, minOriginalPrice, maxOriginalPrice,
-                minGroupPrice, maxGroupPrice));
+                minGroupPrice, maxGroupPrice, categoryId));
     }
 
     @ApiOperation(value = "商品详情", notes = "根据商品ID获取商品详情")

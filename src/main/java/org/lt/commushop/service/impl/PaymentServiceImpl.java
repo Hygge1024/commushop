@@ -156,14 +156,44 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
     }
 
     @Override
-    public IPage<PaymentQueryVO> getPaymentPage(Integer current, Integer size,
+    public IPage<PaymentQueryVO> getPaymentdetailsPage(Integer current, Integer size,
                                                 Integer paymentId, Integer orderId,
-                                                Integer activityId, String paymentMethod,
+                                                String activityName, String paymentMethod,
                                                 LocalDateTime startTime, LocalDateTime endTime) {
-        // 1. 创建分页对象
+        // 1. 如果提供了activityName，先查询相关的活动和订单
+        Set<Integer> validOrderIds = null;
+        if (StringUtils.hasText(activityName)) {
+            // 先查询符合名称的活动
+            LambdaQueryWrapper<GroupBuyingActivity> activityWrapper = new LambdaQueryWrapper<>();
+            activityWrapper.like(GroupBuyingActivity::getActivityName, activityName);
+            List<GroupBuyingActivity> activities = activityService.list(activityWrapper);
+            
+            if (!activities.isEmpty()) {
+                // 查询这些活动相关的订单
+                Set<Integer> activityIds = activities.stream()
+                        .map(GroupBuyingActivity::getActivityId)
+                        .collect(Collectors.toSet());
+                
+                LambdaQueryWrapper<GroupBuyingOrder> orderWrapper = new LambdaQueryWrapper<>();
+                orderWrapper.in(GroupBuyingOrder::getActivityId, activityIds);
+                List<GroupBuyingOrder> orders = orderService.list(orderWrapper);
+                validOrderIds = orders.stream()
+                        .map(GroupBuyingOrder::getOrderId)
+                        .collect(Collectors.toSet());
+            }
+            
+            // 如果没有找到相关订单，直接返回空结果
+            if (validOrderIds == null || validOrderIds.isEmpty()) {
+                IPage<PaymentQueryVO> emptyPage = new Page<>(current, size, 0);
+                emptyPage.setRecords(new ArrayList<>());
+                return emptyPage;
+            }
+        }
+
+        // 2. 创建分页对象
         Page<PaymentRecord> page = new Page<>(current, size);
 
-        // 2. 构建查询条件
+        // 3. 构建查询条件
         LambdaQueryWrapper<PaymentRecord> wrapper = new LambdaQueryWrapper<>();
 
         if (paymentId != null) {
@@ -171,6 +201,10 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
         }
         if (orderId != null) {
             wrapper.eq(PaymentRecord::getOrderId, orderId);
+        }
+        // 如果有活动名称过滤，只查询相关订单的支付记录
+        if (validOrderIds != null) {
+            wrapper.in(PaymentRecord::getOrderId, validOrderIds);
         }
         if (StringUtils.hasText(paymentMethod)) {
             wrapper.eq(PaymentRecord::getPaymentMethod, paymentMethod);
@@ -182,24 +216,21 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
             wrapper.le(PaymentRecord::getPaymentTime, endTime);
         }
 
-        // 3. 查询支付记录
+        // 4. 查询支付记录
         IPage<PaymentRecord> paymentPage = this.page(page, wrapper);
 
-        // 4. 获取所有关联的订单ID
+        // 5. 获取所有关联的订单ID
         Set<Integer> orderIds = paymentPage.getRecords().stream()
                 .map(PaymentRecord::getOrderId)
                 .collect(Collectors.toSet());
 
-        // 5. 批量查询订单信息
+        // 6. 批量查询订单信息
         Map<Integer, GroupBuyingOrder> orderMap = new HashMap<>();
         Set<Integer> activityIds = new HashSet<>();
 
         if (!orderIds.isEmpty()) {
             LambdaQueryWrapper<GroupBuyingOrder> orderWrapper = new LambdaQueryWrapper<>();
             orderWrapper.in(GroupBuyingOrder::getOrderId, orderIds);
-            if (activityId != null) {
-                orderWrapper.eq(GroupBuyingOrder::getActivityId, activityId);
-            }
             List<GroupBuyingOrder> orders = orderService.list(orderWrapper);
             orderMap = orders.stream()
                     .collect(Collectors.toMap(GroupBuyingOrder::getOrderId, order -> order));
@@ -210,7 +241,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
                     .collect(Collectors.toSet());
         }
 
-        // 6. 批量查询活动信息
+        // 7. 批量查询活动信息
         Map<Integer, GroupBuyingActivity> activityMap = new HashMap<>();
         if (!activityIds.isEmpty()) {
             LambdaQueryWrapper<GroupBuyingActivity> activityWrapper = new LambdaQueryWrapper<>();
@@ -220,7 +251,7 @@ public class PaymentServiceImpl extends ServiceImpl<PaymentRecordMapper, Payment
                     .collect(Collectors.toMap(GroupBuyingActivity::getActivityId, activity -> activity));
         }
 
-        // 7. 组装VO对象
+        // 8. 组装VO对象
         IPage<PaymentQueryVO> resultPage = new Page<>(current, size, paymentPage.getTotal());
         List<PaymentQueryVO> voList = new ArrayList<>();
 

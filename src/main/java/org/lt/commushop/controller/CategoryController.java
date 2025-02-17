@@ -33,4 +33,15 @@ public class CategoryController {
     public Result<Category> addCategory(@RequestBody Category category) {
         return Result.success(categoryService.addCategory(category));
     }
+    @ApiOperation(value = "更新商品种类", notes = "更新商品种类信息，包括名称和状态，会进行名称查重")
+    @PutMapping("/update")
+    public Result<Category> updateCategory(@RequestBody Category category) {
+        return Result.success(categoryService.updateCategory(category));
+    }
+    @ApiOperation(value = "删除商品种类", notes = "软删除商品种类（将isDeleted设置为1）")
+    @DeleteMapping("/delete/{categoryId}")
+    public Result<Void> deleteCategory(@PathVariable Integer categoryId) {
+        categoryService.deleteCategory(categoryId);
+        return Result.success();
+    }
 }

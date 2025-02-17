@@ -57,9 +57,9 @@ public interface IPaymentService extends IService<PaymentRecord> {
      * @param endTime 结束时间
      * @return 支付记录分页数据
      */
-    IPage<PaymentQueryVO> getPaymentPage(Integer current, Integer size,
+    IPage<PaymentQueryVO> getPaymentdetailsPage(Integer current, Integer size,
                                          Integer paymentId, Integer orderId,
-                                         Integer activityId, String paymentMethod,
+                                         String activityName, String paymentMethod,
                                          LocalDateTime startTime, LocalDateTime endTime);
     /**
      * 获取支付统计数据
