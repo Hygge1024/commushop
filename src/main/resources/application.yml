@@ -25,3 +25,9 @@ minio:
   accessKey: zcMqYJlgqDsL5jq233iM #minio的访问密钥
   secretKey: hDUhzs0t72gVIvIrlOQnwdlzSEOeXYu0Cd5EVXxV #minio的访问密钥
   bucketName: commoshop #minio的存储桶名称
+
+jwt:
+  secret: commushop-jwt-secret-key-must-be-at-least-32-bytes
+  expiration: 86400000  # 24 hours in milliseconds
+  tokenPrefix: "Bearer "
+  headerKey: "Authorization"
