@@ -2,9 +2,9 @@ import React from 'react';
 import { Form, Input, Button, Card, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import axios from '../../utils/axios';
 import config from '../../utils/config';
 import  api  from '../../services/api';
+import  {userService}  from '../../services/userService';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -49,6 +49,9 @@ const Login = () => {
         //     }
         // }
         try {
+             // 清理之前的登录状态
+             localStorage.clear();
+             sessionStorage.clear();
             const response = await api.post(config.api.login, null, {
                 params: {
                     username: values.username,
@@ -65,7 +68,43 @@ const Login = () => {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('refreshToken', response.data.refreshToken);
                 localStorage.setItem('username', values.username);
-                navigate(from, { replace: true });
+                // navigate(from, { replace: true });
+
+                //获取用户详情(进行身份判断)
+                try{
+                    // console.log("开始进行身份认证");
+                    const userResponse = await userService.getUserDetail(values.username);
+                    // console.log("用户认证结束");
+                    const roleID = userResponse.data.role.roleId;
+                    console.log("当前用户:"+values.username+"的角色ID是"+roleID);
+                     // 保存用户角色ID
+                     localStorage.setItem('roleId', roleID.toString());
+                    // switch(roleID){
+                    //     case 1:
+                    //         navigate(from, { replace: true });
+                    //         break;
+                    //     case 2:
+                    //         navigate('/consumer_home');
+                    //         break;
+                    //     case 3:
+                    //         navigate('/leader_home');
+                    //         break;
+                    //     default:
+                    //         console.error("您没有权限登录:未知的用户角色");
+                    //         break;
+                    // }
+                    if (!roleID) {
+                        message.error('获取用户角色失败');
+                        return;
+                    }
+                    // 统一跳转到根路由，让App.js根据roleID处理具体跳转
+                    navigate('/', { replace: true });
+                }catch{
+                    message.error('获取用户信息失败');
+                    console.error('获取用户信息失败');
+                }
+
+                // 跳转到主页
                 return; // 添加return防止继续执行
             }
 

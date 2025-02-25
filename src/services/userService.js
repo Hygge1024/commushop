@@ -17,7 +17,7 @@
 //         try {
 //             const { current, size, userId, username, phone } = params;
 //             const queryParams = new URLSearchParams();
-            
+
 //             if (current) queryParams.append('current', current);
 //             if (size) queryParams.append('size', size);
 //             if (userId) queryParams.append('userId', userId);
@@ -55,12 +55,32 @@ export const userService = {
         }
     },
 
+    //获取用户详细信息（地址加身份信息）
+    getUserDetail: async (username) => {
+        try {
+            const response = await api.get(`${API_ENDPOINTS.USER.DETAIL}/${username}`);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    //注册用户
+    registerUser: async (data) => {
+        try {
+            const response = await api.post(API_ENDPOINTS.USER.REGISTER, data);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     // 获取用户列表
     getUserList: async (params) => {
         try {
             const { current, size, userId, username, phone } = params;
             const queryParams = new URLSearchParams();
-            
+
             if (current) queryParams.append('current', current);
             if (size) queryParams.append('size', size);
             if (userId) queryParams.append('userId', userId);

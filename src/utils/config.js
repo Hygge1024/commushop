@@ -1,5 +1,5 @@
 const config = {
-    baseURL: 'http://8.137.53.253:8081',
+    baseURL: 'http://localhost:8081',
     api: {
         login: '/api/login',
         register: '/api/register',
@@ -8,7 +8,7 @@ const config = {
 
 export default config;
 
-export const API_BASE_URL = 'http://8.137.53.253:8081';
+export const API_BASE_URL = 'http://localhost:8081';
 //集中处理API的配置，使其在其它地方使用这些API时，可以方便引用和修改这些常量，而不需要在代码中硬编码URL和路径
 export const API_ENDPOINTS = {
     GOODS: {
@@ -37,6 +37,8 @@ export const API_ENDPOINTS = {
         INFO: '/api/userInfo',
         PAGE: `${API_BASE_URL}/api/page`,
         STATISTICS: `${API_BASE_URL}/api/statistics`,
+        DETAIL: `/api/details`,
+        REGISTER: '/api/register',
     },
     ACTIVITY: {
         LIST: '/api/activity/page',

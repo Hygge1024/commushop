@@ -1,25 +1,31 @@
 import React from 'react';
 import { Form, Input, Button, Card, message, Radio, Select } from 'antd';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from '../../utils/axios';
-import config from '../../utils/config';
+import  {userService}  from '../../services/userService';
+// import { ReloadOutlined } from '@ant-design/icons';
 
 const Register = () => {
     const navigate = useNavigate();
 
+    const roleOptions = [
+        { label : '管理员', value: 1},
+        { label : '普通用户', value: 2},
+        { label : '团长', value:3}
+    ];
+
     const onFinish = async (values) => {
         try {
-            const response = await axios.post('/api/register', {
+            const response = await userService.registerUser({
                 ...values,
-                roleId: 1 // 默认角色ID
+                roleId:  values.roleId // 默认角色ID
             });
-
-            if (response.data.success) {
+            // console.log("注册响应:", response);
+            if (response.success) {
                 message.success('注册成功');
                 navigate('/login');
             }else {
                 // 处理业务逻辑错误
-                message.error(response.data.message || '注册失败');
+                message.error(response.message || '注册失败');
             }
         } catch (error) {
             // 处理网络错误或服务器错误
@@ -34,7 +40,9 @@ const Register = () => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            background: '#f0f2f5'
+            background: `url('/login.jpg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
         }}>
             <Card style={{ width: 400 }}>
                 <h2 style={{ textAlign: 'center', marginBottom: 24 }}>CommuShop 注册</h2>
@@ -42,6 +50,7 @@ const Register = () => {
                     name="register"
                     onFinish={onFinish}
                     layout="vertical"
+                    initialValues={{roleId : 2}}// 默认用户角色
                 >
                     <Form.Item
                         name="username"
@@ -104,6 +113,13 @@ const Register = () => {
                             <Radio value={1}>男</Radio>
                             <Radio value={0}>女</Radio>
                         </Radio.Group>
+                    </Form.Item>
+                    <Form.Item
+                        name="roleId"
+                        label="用户角色"
+                        rules={[{ required: true, message: '请选择用户角色' }]}
+                    >
+                        <Select options={roleOptions} />
                     </Form.Item>
 
                     <Form.Item>

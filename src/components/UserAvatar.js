@@ -38,8 +38,14 @@ const UserAvatar = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username'); // 同时清除用户名
+    // 清除所有localStorage数据
+    localStorage.clear();
+    
+    // 清除可能存在的sessionStorage数据
+    sessionStorage.clear();
+    
+    // 触发一个自定义事件通知其他组件
+    window.dispatchEvent(new Event('userLogout'));
     message.success('已退出登录');
     navigate('/login');
   };
