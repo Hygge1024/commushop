@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from '../../utils/axios';
 import config from '../../utils/config';
+import  api  from '../../services/api';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -11,33 +12,71 @@ const Login = () => {
     const from = location.state?.from?.pathname || '/dashboard';
 
     const onFinish = async (values) => {
+        // try {
+        //     const response = await axios.post(config.api.login, null, {
+        //         params: {
+        //             username: values.username,
+        //             password: values.password
+        //         }
+        //     });
+
+        //     console.log('登录响应:', response.data);
+
+        //     // 登录成功
+        //     if (response.data.success) {
+        //         message.success('登录成功');
+        //         localStorage.setItem('token', response.data.data.token);
+        //         localStorage.setItem('username', values.username);
+        //         // console.log('登录成功,Token为:', localStorage.getItem('token'));
+        //         navigate(from, { replace: true });
+        //         return; // 添加return防止继续执行
+        //     }
+
+        //     // 登录失败
+        //     message.error(response.data.message || '登录失败');
+
+        // } catch (error) {
+        //     // 防止页面刷新，需要阻止默认行为
+        //     if (error.response) {
+        //         // 服务器返回错误
+        //         message.error(error.response.data.message || '登录失败');
+        //     } else if (error.request) {
+        //         // 请求发送失败
+        //         message.error('网络连接失败，请检查网络');
+        //     } else {
+        //         // 其他错误
+        //         message.error('登录失败: ' + error.message);
+        //     }
+        // }
         try {
-            const response = await axios.post(config.api.login, null, {
+            const response = await api.post(config.api.login, null, {
                 params: {
                     username: values.username,
                     password: values.password
                 }
             });
 
-            console.log('登录响应:', response.data);
+            console.log('登录响应:', response);
 
             // 登录成功
-            if (response.data.success) {
+            if (response.success) {
                 message.success('登录成功');
-                localStorage.setItem('token', 'logged-in');
+                // 存储 token 和 refresh token
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('refreshToken', response.data.refreshToken);
                 localStorage.setItem('username', values.username);
                 navigate(from, { replace: true });
                 return; // 添加return防止继续执行
             }
 
             // 登录失败
-            message.error(response.data.message || '登录失败');
+            message.error(response.message || '登录失败');
 
         } catch (error) {
             // 防止页面刷新，需要阻止默认行为
             if (error.response) {
                 // 服务器返回错误
-                message.error(error.response.data.message || '登录失败');
+                message.error(error.response.data?.message || '登录失败');
             } else if (error.request) {
                 // 请求发送失败
                 message.error('网络连接失败，请检查网络');
@@ -54,7 +93,9 @@ const Login = () => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            background: '#f0f2f5'
+            background: `url('/login.jpg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
         }}>
             <Card style={{ width: 400 }}>
                 <h2 style={{ textAlign: 'center', marginBottom: 24 }}>CommuShop 登录</h2>

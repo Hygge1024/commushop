@@ -132,7 +132,7 @@ function App() {
                     </Menu.Item>
                   </Menu.SubMenu>
 
-                  <Menu.SubMenu key="sub6" icon={<SettingOutlined />} title="系统设置">
+                  <Menu.SubMenu key="sub6" icon={<SettingOutlined />} title="用户管理">
                     <Menu.Item key="6-1">
                       <Link to="/settings/users">用户查询</Link>
                     </Menu.Item>

@@ -17,9 +17,14 @@ const Register = () => {
             if (response.data.success) {
                 message.success('注册成功');
                 navigate('/login');
+            }else {
+                // 处理业务逻辑错误
+                message.error(response.data.message || '注册失败');
             }
         } catch (error) {
-            message.error('注册失败: ' + error.message);
+            // 处理网络错误或服务器错误
+            const errorMessage = error.response?.data?.message || error.message || '注册失败';
+            message.error(errorMessage);
         }
     };
 

@@ -161,7 +161,8 @@ const GoodsList = () => {
         categoryId: currentSearchParams.categoryId
       });
 
-      console.log('API Response:', response);
+      // console.log('API Response:', response);
+      console.log("获取到了商品数据");
 
       // 处理分页数据
       if (response.data && response.data.records) {
@@ -279,10 +280,10 @@ const GoodsList = () => {
       formData.append('categories', JSON.stringify(categoriesData));
 
       setLoading(true);// 设置加载状态为 true
-      await goodsService.uploadProduct(formData);
+      await goodsService.uploadProduct(formData);// 调用上传商品接口
       message.success('商品添加成功');
       setIsModalVisible(false);
-      form.resetFields();
+      form.resetFields();// 重置表单
       setUploadFile(null);
       fetchData(); // 刷新列表
     } catch (error) {
@@ -325,6 +326,7 @@ const GoodsList = () => {
     }
   };
 
+  // 图片文件改变处理
   const handleImageChange = (info) => {
     const { fileList } = info;
     setEditFileList(fileList);

@@ -200,9 +200,14 @@ const UserList = () => {
                             <Descriptions title="地址信息" bordered style={{ marginTop: '24px' }}>
                                 {selectedUser.addresses && selectedUser.addresses.length > 0 ? (
                                     selectedUser.addresses.map((address, index) => (
-                                        <Descriptions.Item key={index} label={`地址${index + 1}`} span={3}>
-                                            {address}
-                                        </Descriptions.Item>
+                                        <Descriptions.Item 
+                                        key={address.addressId || index} 
+                                        label={`地址${index + 1}`} 
+                                        span={3}
+                                    >
+                                        {address.addressDetail}
+                                        {address.isDefault && <Tag color="blue" style={{ marginLeft: '8px' }}>默认</Tag>}
+                                    </Descriptions.Item>
                                     ))
                                 ) : (
                                     <Descriptions.Item span={3}>暂无地址信息</Descriptions.Item>

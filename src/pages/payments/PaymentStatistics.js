@@ -5,21 +5,21 @@ import ReactECharts from 'echarts-for-react';
 import { paymentService } from '../../services/paymentService';
 import dayjs from 'dayjs';
 
-const { RangePicker } = DatePicker;
+const { RangePicker } = DatePicker;// 导入日期选择组件
 
 const PaymentStatistics = () => {
-    const [loading, setLoading] = useState(true);
-    const [statistics, setStatistics] = useState(null);
+    const [loading, setLoading] = useState(true);// 加载状态
+    const [statistics, setStatistics] = useState(null);// 统计数据
     const [dateRange, setDateRange] = useState([
         dayjs('2024-01-01 00:00:00'),
         dayjs('2025-03-05 23:59:59')
-    ]);
+    ]);// 日期范围
 
     useEffect(() => {
         fetchStatistics();
     }, []);
 
-    const fetchStatistics = async () => {
+    const fetchStatistics = async () => {// 获取统计数据
         try {
             setLoading(true);
             const response = await paymentService.getPaymentStatistics({

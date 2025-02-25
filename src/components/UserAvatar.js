@@ -16,7 +16,7 @@ const UserAvatar = () => {
     }
   }, []);
 
-  //下面的代码需要修改的————应该使用统一的方式
+  // 获取用户信息
   const fetchUserInfo = async (username) => {
     try {
       // const response = await axios.get(`http://localhost:8080/api/userInfo/${username}`);
