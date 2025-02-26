@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
-import { Layout, Menu, theme, message } from 'antd';
+import { Layout, Menu, theme, message ,Spin } from 'antd';
 import {
   DashboardOutlined,
   ShoppingOutlined,
@@ -42,33 +42,45 @@ const { Header, Sider, Content } = Layout;
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
+  //获取用户角色
+  const [roleID, setRoleID] = useState(localStorage.getItem('roleId'));
+  console.log("this", roleID);
+  const [loading, setLoading] = useState(true);
+
   const {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  //获取用户角色
-  const [roleID, setRoleID] = useState(localStorage.getItem('roleId'));
-  console.log("App.js界面中的" + roleID);
-  // 监听roleID的变化
+  // 初始化和监听角色变化
   useEffect(() => {
-    const handleStorageChange = () => {
+    const checkAuth = () => {
       const currentRoleID = localStorage.getItem('roleId');
-      setRoleID(currentRoleID);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setRoleID(null);
+      } else {
+        setRoleID(currentRoleID);
+        console.log("角色ID为：", currentRoleID);
+        console.log("角色ID类型：", typeof currentRoleID);
+        console.log("角色ID === '1':", currentRoleID === '1');
+        console.log("角色ID == 1:", currentRoleID == 1);      }
+      setLoading(false);
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
+    // 立即执行一次检查
+    checkAuth();
+
+    // 监听存储变化（用于多标签页同步）
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
   }, []);
-  //根据角色ID渲染不同的页面
-  const getLayoutByRole = () => {
-    switch (roleID) {
-      case '1':
-        return (
-          <Layout style={{ minHeight: '100vh' }}>
-            {/* 左侧导航栏 */}
-            <Sider
+
+ // 管理员布局
+ const AdminLayout = () => (
+  <Layout style={{ minHeight: '100vh' }}>
+  {/* //           左侧导航栏 */}
+             <Sider
               trigger={null}
               collapsible
               collapsed={collapsed}
@@ -212,71 +224,63 @@ function App() {
               </Content>
             </Layout>
           </Layout>
-        );
-      case '2':
-        return (
-          <Layout style={{ minHeight: '100vh' }}>
-            <Header style={{ background: colorBgContainer, padding: '0 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <div className="logo" style={{ marginRight: '20px', fontSize: '18px' }}>CommuShop</div>
-                  <Menu mode="horizontal" defaultSelectedKeys={['1']}>
-                    <Menu.Item key="1">商品浏览</Menu.Item>
-                    <Menu.Item key="2">我的订单</Menu.Item>
-                    <Menu.Item key="3">个人中心</Menu.Item>
-                  </Menu>
-                </div>
-                <UserAvatar />
-              </div>
-            </Header>
-            <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
-              <div style={{ padding: 24, background: colorBgContainer }}>
-                <Routes>
-                  <Route path="/consumer_home" element={<ConsumerHome />} />
-                  <Route path="/" element={<Navigate to="/consumer_home" replace />} />
-                </Routes>
-              </div>
-            </Content>
-          </Layout>
-        );
-      case '3':
-        return (
-          <Layout style={{ minHeight: '100vh' }}>
-            <Header style={{ background: colorBgContainer, padding: '0 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <div className="logo" style={{ marginRight: '20px', fontSize: '18px' }}>CommuShop - 团长管理</div>
-                  <Menu mode="horizontal" defaultSelectedKeys={['1']}>
-                    <Menu.Item key="1">商品管理</Menu.Item>
-                    <Menu.Item key="2">团员管理</Menu.Item>
-                    <Menu.Item key="3">数据统计</Menu.Item>
-                    <Menu.Item key="4">个人中心</Menu.Item>
-                  </Menu>
-                </div>
-                <UserAvatar />
-              </div>
-            </Header>
-            <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
-              <div style={{ padding: 24, background: colorBgContainer }}>
-                <Routes>
-                  <Route path="/leader_home" element={<LeaderHome />} />
-                  <Route path="/" element={<Navigate to="/leader_home" replace />} />
-                </Routes>
-              </div>
-            </Content>
-          </Layout>
-        );
-      default:
-        message.error('用户账号信息存在问题，请联系管理员');
-        // 清除所有登录信息
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        localStorage.removeItem('roleId');
-        // 重定向到登录页面
-        return <Navigate to="/login" replace />;
-    }
-  }
+);
 
+// 消费者布局
+const ConsumerLayout = () => (
+  <Layout style={{ minHeight: '100vh' }}>
+    <Header style={{ 
+      background: 'linear-gradient(135deg, #1e88e5 0%, #42a5f5 35%, #64b5f6 70%, #90caf9 100%)',
+      padding: '0 24px',
+      boxShadow: '0 4px 15px rgba(30, 136, 229, 0.3), 0 2px 5px rgba(0, 0, 0, 0.1)',
+      position: 'relative',
+      zIndex: 1
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="logo" style={{ fontSize: '24px', fontWeight: 'bold', marginRight: '24px', color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>CommuShop</div>
+          <div style={{ fontSize: '18px', color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>共享品质生活 · 让社区更美好</div>
+        </div>
+        <UserAvatar />
+      </div>
+    </Header>
+    <Content>
+      <ConsumerHome />
+    </Content>
+  </Layout>
+);
+
+  // 团长布局
+  const LeaderLayout = () => (
+    <Layout style={{ minHeight: '100vh' }}>
+     <Header style={{ 
+      background: 'linear-gradient(135deg, #1e88e5 0%, #42a5f5 35%, #64b5f6 70%, #90caf9 100%)',
+      padding: '0 24px',
+      boxShadow: '0 4px 15px rgba(30, 136, 229, 0.3), 0 2px 5px rgba(0, 0, 0, 0.1)',
+      position: 'relative',
+      zIndex: 1
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="logo" style={{ fontSize: '24px', fontWeight: 'bold', marginRight: '24px', color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>CommuShop</div>
+          <div style={{ fontSize: '18px', color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>共享品质生活 · 让社区更美好</div>
+        </div>
+        <UserAvatar />
+      </div>
+    </Header>
+      <Content>
+        <LeaderHome />
+      </Content>
+    </Layout>
+  );
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
   return (
     <Router>
       <Routes>
@@ -287,8 +291,11 @@ function App() {
         {/* 受保护路由 */}
         <Route path="/*" element={
           <PrivateRoute>
-            {getLayoutByRole()}
-
+            {/* {getLayoutByRole()} */}
+            {roleID === '1' && <AdminLayout />}
+            {roleID === '2' && <ConsumerLayout />}
+            {roleID === '3' && <LeaderLayout />}
+            {!roleID && <Navigate to="/login" replace />}
           </PrivateRoute>
         }>
 
@@ -311,7 +318,10 @@ function App() {
           <Route path="leader_home" element={<LeaderHome />} /> */}
 
         </Route>
+          {/* 404 路由 */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+
     </Router>
   );
 }

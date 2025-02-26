@@ -9,56 +9,22 @@ import  {userService}  from '../../services/userService';
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from?.pathname || '/dashboard';
+    // const from = location.state?.from?.pathname || '/dashboard';
 
     const onFinish = async (values) => {
-        // try {
-        //     const response = await axios.post(config.api.login, null, {
-        //         params: {
-        //             username: values.username,
-        //             password: values.password
-        //         }
-        //     });
-
-        //     console.log('登录响应:', response.data);
-
-        //     // 登录成功
-        //     if (response.data.success) {
-        //         message.success('登录成功');
-        //         localStorage.setItem('token', response.data.data.token);
-        //         localStorage.setItem('username', values.username);
-        //         // console.log('登录成功,Token为:', localStorage.getItem('token'));
-        //         navigate(from, { replace: true });
-        //         return; // 添加return防止继续执行
-        //     }
-
-        //     // 登录失败
-        //     message.error(response.data.message || '登录失败');
-
-        // } catch (error) {
-        //     // 防止页面刷新，需要阻止默认行为
-        //     if (error.response) {
-        //         // 服务器返回错误
-        //         message.error(error.response.data.message || '登录失败');
-        //     } else if (error.request) {
-        //         // 请求发送失败
-        //         message.error('网络连接失败，请检查网络');
-        //     } else {
-        //         // 其他错误
-        //         message.error('登录失败: ' + error.message);
-        //     }
-        // }
+        console.log("开始登录");
         try {
              // 清理之前的登录状态
              localStorage.clear();
              sessionStorage.clear();
+             console.log("开始提交");
             const response = await api.post(config.api.login, null, {
                 params: {
                     username: values.username,
                     password: values.password
                 }
             });
-
+            console.log("提交结束？");
             console.log('登录响应:', response);
 
             // 登录成功
@@ -68,7 +34,6 @@ const Login = () => {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('refreshToken', response.data.refreshToken);
                 localStorage.setItem('username', values.username);
-                // navigate(from, { replace: true });
 
                 //获取用户详情(进行身份判断)
                 try{
@@ -78,21 +43,26 @@ const Login = () => {
                     const roleID = userResponse.data.role.roleId;
                     console.log("当前用户:"+values.username+"的角色ID是"+roleID);
                      // 保存用户角色ID
-                     localStorage.setItem('roleId', roleID.toString());
-                    // switch(roleID){
-                    //     case 1:
-                    //         navigate(from, { replace: true });
-                    //         break;
-                    //     case 2:
-                    //         navigate('/consumer_home');
-                    //         break;
-                    //     case 3:
-                    //         navigate('/leader_home');
-                    //         break;
-                    //     default:
-                    //         console.error("您没有权限登录:未知的用户角色");
-                    //         break;
-                    // }
+                    localStorage.setItem('roleId', roleID.toString());
+               
+                    switch(roleID){
+                        case 1:
+                            navigate('/dashboard', { replace: true });
+                            window.location.reload();
+                            break;
+                        case 2:
+                            navigate('/consumer_home', { replace: true });
+                            window.location.reload();
+                            console.log("消费者首页");
+                            break;
+                        case 3:
+                            navigate('/leader_home', { replace: true });
+                            window.location.reload();
+                            break;
+                        default:
+                            console.error("您没有权限登录:未知的用户角色");
+                            break;
+                    }
                     if (!roleID) {
                         message.error('获取用户角色失败');
                         return;
