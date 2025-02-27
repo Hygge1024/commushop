@@ -1,10 +1,15 @@
 spring:
   datasource:
     druid:
+#      driver-class-name: com.mysql.cj.jdbc.Driver #mysql的驱动类
+#      url: jdbc:mysql://localhost:3306/commushop?characterEncoding=utf8&serverTimezone=GMT%2b8 #mysql的地址
+#      username: root #mysql的账号
+#      password: 123456 #mysql的密码
+
       driver-class-name: com.mysql.cj.jdbc.Driver #mysql的驱动类
-      url: jdbc:mysql://localhost:3306/commushop?characterEncoding=utf8&serverTimezone=GMT%2b8 #mysql的地址
+      url: jdbc:mysql://8.137.53.253:3306/commushopdev?characterEncoding=utf8&serverTimezone=GMT%2b8 #mysql的地址
       username: root #mysql的账号
-      password: 123456 #mysql的密码
+      password: mysql_hercyz #mysql的密码
   application:
     name: commushop_dev #项目名称
   servlet:
@@ -15,15 +20,15 @@ spring:
       max-request-size: 10MB #请求的最大大小
 
 server:
-  port: 8080 #服务端口
+  port: 8081 #服务端口
   servlet:
      context-path: /api #接口路径
 
 
 minio:
   endpoint: http://8.137.53.253:9000 #minio的地址
-  accessKey: zcMqYJlgqDsL5jq233iM #minio的访问密钥
-  secretKey: hDUhzs0t72gVIvIrlOQnwdlzSEOeXYu0Cd5EVXxV #minio的访问密钥
+  accessKey: BE83o8xLiyLLiq70dDzl #minio的访问密钥
+  secretKey: rj2OEb1zUiU360OLXhcn6ZfnB19UgZXdvdvg7Nr0 #minio的访问密钥
   bucketName: commoshop #minio的存储桶名称
 
 jwt:

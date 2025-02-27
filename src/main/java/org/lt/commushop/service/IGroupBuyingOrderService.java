@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  * @since 2025-01-21
  */
 public interface IGroupBuyingOrderService extends IService<GroupBuyingOrder> {
-    
+
     /**
      * 创建团购订单
      *
@@ -29,7 +29,7 @@ public interface IGroupBuyingOrderService extends IService<GroupBuyingOrder> {
      * @param quantity 购买数量
      * @return 订单ID
      */
-    Integer createOrder(String activityCode, Integer userId, Integer quantity);
+    Integer createOrder(String activityCode, Integer userId, Integer quantity,String address,Integer leaderId);
 
     /**
      * 删除团购订单
@@ -77,7 +77,7 @@ public interface IGroupBuyingOrderService extends IService<GroupBuyingOrder> {
     IPage<OrderQueryVO> getOrderPage(Integer current, Integer size,
                                    Integer userId, String activityName,
                                    Integer orderStatus,
-                                   BigDecimal minAmount, BigDecimal maxAmount,
+                                   BigDecimal minAmount, BigDecimal maxAmount,Integer leaderId,
                                    LocalDateTime startTime, LocalDateTime endTime);
 
     /**
@@ -91,5 +91,7 @@ public interface IGroupBuyingOrderService extends IService<GroupBuyingOrder> {
      * @param orderId 订单ID
      * @return 是否发货成功
      */
-    boolean shipOrder(Integer orderId);
+    boolean shipOrder(Integer orderId,Integer orderStatus);
+
+    boolean updateAddress(Integer orderId,String newAddress);
 }

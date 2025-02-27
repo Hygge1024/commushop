@@ -45,5 +45,9 @@ public class GroupBuyingOrder implements Serializable {
 
     private Integer isDeleted;
 
+    private String address;
+
+    private Integer leaderId;
+
 
 }

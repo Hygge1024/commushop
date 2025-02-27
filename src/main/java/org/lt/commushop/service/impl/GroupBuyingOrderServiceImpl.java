@@ -49,9 +49,9 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Integer createOrder(String activityCode, Integer userId, Integer quantity) {
+    public Integer createOrder(String activityCode, Integer userId, Integer quantity,String address,Integer leaderId) {
         // 1. 参数校验
-        if (activityCode == null || activityCode.trim().isEmpty() || userId == null || quantity == null || quantity <= 0) {
+        if (activityCode == null || activityCode.trim().isEmpty() || userId == null || quantity == null || quantity <= 0 || address == null || leaderId == null) {
             throw new BusinessException("参数错误");
         }
 
@@ -99,7 +99,9 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
                 .setUserId(userId)
                 .setQuantity(quantity)
                 .setOrderStatus(1) // 1表示未支付
-                .setCreateTime(LocalDateTime.now());
+                .setCreateTime(LocalDateTime.now())
+                .setAddress(address)
+                .setLeaderId(leaderId);
 
         // 计算订单总金额
         order.setOrderAmount(totalUnitPrice.multiply(BigDecimal.valueOf(quantity)));
@@ -210,7 +212,7 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
     public IPage<OrderQueryVO> getOrderPage(Integer current, Integer size,
                                           Integer userId, String activityName,
                                           Integer orderStatus,
-                                          BigDecimal minAmount, BigDecimal maxAmount,
+                                          BigDecimal minAmount, BigDecimal maxAmount,Integer leaderId,
                                           LocalDateTime startTime, LocalDateTime endTime) {
         // 1. 创建分页对象
         Page<GroupBuyingOrder> page = new Page<>(current, size);
@@ -246,6 +248,9 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
         }
         if (maxAmount != null) {
             orderWrapper.le(GroupBuyingOrder::getOrderAmount, maxAmount);
+        }
+        if(leaderId != null){
+            orderWrapper.eq(GroupBuyingOrder::getLeaderId, leaderId);
         }
         if (startTime != null) {
             orderWrapper.ge(GroupBuyingOrder::getCreateTime, startTime);
@@ -416,20 +421,36 @@ public class GroupBuyingOrderServiceImpl extends ServiceImpl<GroupBuyingOrderMap
     }
 
     @Override
-    public boolean shipOrder(Integer orderId) {
+    public boolean shipOrder(Integer orderId,Integer orderStatus) {
         // 1. 查询订单是否存在
         GroupBuyingOrder order = this.getById(orderId);
         if (order == null) {
             throw new BusinessException("订单不存在");
         }
 
-        // 2. 检查订单状态是否为已支付（3）
-        if (!order.getOrderStatus().equals(3)) {
-            throw new BusinessException("只有已支付的订单才能发货");
+//        // 2. 检查订单状态是否为已支付（3）
+//        if (!order.getOrderStatus().equals(3)) {
+//            throw new BusinessException("只有已支付的订单才能发货");
+//        }
+
+        // 3. 更新订单状态:未支付_1、支付中_2、已支付_3（也就表示待发货）、已发货_4、已完成_5(也就表示已收货完成)
+        if(orderStatus != null){
+            order.setOrderStatus(orderStatus);
+        }
+        return this.updateById(order);
+    }
+    @Override
+    public boolean updateAddress(Integer orderId,String newAddress) {
+        // 1. 查询订单是否存在
+        GroupBuyingOrder order = this.getById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
         }
 
-        // 3. 更新订单状态为已发货（4）
-        order.setOrderStatus(4);
+        // 3. 更新订单地址
+        if(newAddress != null){
+            order.setAddress(newAddress);
+        }
         return this.updateById(order);
     }
 

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.models.auth.In;
 import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.entity.GroupBuyingOrder;
 import org.lt.commushop.domain.vo.OrderQueryVO;
@@ -38,9 +39,11 @@ public class GroupBuyingOrderController {
     public Result<Integer> createOrder(
             @ApiParam(value = "活动编码", required = true) @RequestParam String activityCode,
             @ApiParam(value = "用户ID", required = true) @RequestParam Integer userId,
-            @ApiParam(value = "购买数量", required = true) @RequestParam Integer quantity) {
+            @ApiParam(value = "购买数量", required = true) @RequestParam Integer quantity,
+            @ApiParam(value = "收货地址",required = true) @RequestParam String address,
+            @ApiParam(value = "指定团长", required = true) @RequestParam Integer leaderId) {
 
-        Integer orderId = orderService.createOrder(activityCode, userId, quantity);
+        Integer orderId = orderService.createOrder(activityCode, userId, quantity,address,leaderId);
         return Result.success(orderId, "创建订单成功");
     }
 
@@ -85,6 +88,7 @@ public class GroupBuyingOrderController {
             @ApiParam(value = "订单状态：1-待支付，2-已支付，3-已取消") @RequestParam(required = false) Integer orderStatus,
             @ApiParam(value = "最小订单金额") @RequestParam(required = false) BigDecimal minAmount,
             @ApiParam(value = "最大订单金额") @RequestParam(required = false) BigDecimal maxAmount,
+            @ApiParam(value = "团长id" ) @RequestParam(required = false) Integer leaderId,
             @ApiParam(value = "开始时间", example = "2025-02-07 00:00:00")
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
             @ApiParam(value = "结束时间", example = "2025-02-07 23:59:59")
@@ -92,16 +96,25 @@ public class GroupBuyingOrderController {
 
         return Result.success(orderService.getOrderPage(current, size,
                 userId, activityName, orderStatus,
-                minAmount, maxAmount,
+                minAmount, maxAmount,leaderId,
                 startTime, endTime));
     }
 
-    @PostMapping("/{orderId}/ship")
-    @ApiOperation("订单发货")
+    @PostMapping("/shipStatus")
+    @ApiOperation("订单发货-状态更改")
     public Result<Boolean> shipOrder(
             @ApiParam(value = "订单ID", required = true)
-            @PathVariable Integer orderId) {
-        return Result.success(orderService.shipOrder(orderId));
+            @RequestParam(required = true) Integer orderId,
+            @ApiParam(value = "订单新状态", required = true)
+            @RequestParam(required = true) Integer orderStatus) {
+        return Result.success(orderService.shipOrder(orderId,orderStatus));
+    }
+
+    @PostMapping("/updateAddress")
+    @ApiOperation("订单修改收货地址")
+    public Result<Boolean> updateAddress(@ApiParam(value = "订单ID", required = true) @RequestParam Integer orderId,
+                                         @ApiParam(value = "新地址", required = true) @RequestParam String newAddress){
+        return Result.success(orderService.updateAddress(orderId,newAddress));
     }
 
     @GetMapping("/statistics")
