@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
-import { Layout, Menu, theme, message ,Spin } from 'antd';
+import { Layout, Menu, theme, message ,Spin, Grid, Row, Col } from 'antd';
 import {
   DashboardOutlined,
   ShoppingOutlined,
@@ -227,52 +227,122 @@ function App() {
 );
 
 // 消费者布局
-const ConsumerLayout = () => (
-  <Layout style={{ minHeight: '100vh' }}>
-    <Header style={{ 
-      background: 'linear-gradient(135deg, #1e88e5 0%, #42a5f5 35%, #64b5f6 70%, #90caf9 100%)',
-      padding: '0 24px',
-      boxShadow: '0 4px 15px rgba(30, 136, 229, 0.3), 0 2px 5px rgba(0, 0, 0, 0.1)',
-      position: 'relative',
-      zIndex: 1
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="logo" style={{ fontSize: '24px', fontWeight: 'bold', marginRight: '24px', color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>CommuShop</div>
-          <div style={{ fontSize: '18px', color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>共享品质生活 · 让社区更美好</div>
-        </div>
-        <UserAvatar />
-      </div>
-    </Header>
-    <Content>
-      <ConsumerHome />
-    </Content>
-  </Layout>
-);
-
-  // 团长布局
-  const LeaderLayout = () => (
+const ConsumerLayout = () => {
+  const screens = Grid.useBreakpoint();
+  
+  return (
     <Layout style={{ minHeight: '100vh' }}>
-     <Header style={{ 
-      background: 'linear-gradient(135deg, #1e88e5 0%, #42a5f5 35%, #64b5f6 70%, #90caf9 100%)',
-      padding: '0 24px',
-      boxShadow: '0 4px 15px rgba(30, 136, 229, 0.3), 0 2px 5px rgba(0, 0, 0, 0.1)',
-      position: 'relative',
-      zIndex: 1
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="logo" style={{ fontSize: '24px', fontWeight: 'bold', marginRight: '24px', color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>CommuShop</div>
-          <div style={{ fontSize: '18px', color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>共享品质生活 · 让社区更美好</div>
-        </div>
-        <UserAvatar />
-      </div>
-    </Header>
-      <Content>
+      <Header style={{ 
+        background: 'linear-gradient(135deg, #1e88e5 0%, #42a5f5 35%, #64b5f6 70%, #90caf9 100%)',
+        padding: '0 24px',
+        boxShadow: '0 4px 15px rgba(30, 136, 229, 0.3), 0 2px 5px rgba(0, 0, 0, 0.1)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        zIndex: 1000,
+        height: screens.xs ? '56px' : '64px',
+      }}>
+        <Row justify="space-between" align="middle" style={{ height: '100%' }}>
+          <Col flex="auto">
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              gap: screens.xs ? '8px' : '24px',
+              flexWrap: screens.xs ? 'nowrap' : 'wrap'
+            }}>
+              <div className="logo" style={{ 
+                fontSize: screens.xs ? '18px' : '24px', 
+                fontWeight: 'bold',
+                color: 'white',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+                whiteSpace: 'nowrap'
+              }}>
+                CommuShop
+              </div>
+              {!screens.xs && (
+                <div style={{ 
+                  fontSize: screens.sm ? '14px' : '18px',
+                  color: 'white',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+                  whiteSpace: 'nowrap'
+                }}>
+                  共享品质生活 · 让社区更美好
+                </div>
+              )}
+            </div>
+          </Col>
+          <Col>
+            <UserAvatar />
+          </Col>
+        </Row>
+      </Header>
+      <Content style={{ marginTop: screens.xs ? '56px' : '64px' }}>
+        <ConsumerHome />
+      </Content>
+    </Layout>
+  );
+};
+
+// 团长布局
+const LeaderLayout = () => {
+  const screens = Grid.useBreakpoint();
+  
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header style={{ 
+        background: 'linear-gradient(135deg, #1e88e5 0%, #42a5f5 35%, #64b5f6 70%, #90caf9 100%)',
+        padding: '0 24px',
+        boxShadow: '0 4px 15px rgba(30, 136, 229, 0.3), 0 2px 5px rgba(0, 0, 0, 0.1)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        zIndex: 1000,
+        height: screens.xs ? '56px' : '64px',
+      }}>
+        <Row justify="space-between" align="middle" style={{ height: '100%' }}>
+          <Col flex="auto">
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              gap: screens.xs ? '8px' : '24px',
+              flexWrap: screens.xs ? 'nowrap' : 'wrap'
+            }}>
+              <div className="logo" style={{ 
+                fontSize: screens.xs ? '18px' : '24px', 
+                fontWeight: 'bold',
+                color: 'white',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+                whiteSpace: 'nowrap'
+              }}>
+                CommuShop
+              </div>
+              {!screens.xs && (
+                <div style={{ 
+                  fontSize: screens.sm ? '14px' : '18px',
+                  color: 'white',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+                  whiteSpace: 'nowrap'
+                }}>
+                  共享品质生活 · 让社区更美好
+                </div>
+              )}
+            </div>
+          </Col>
+          <Col>
+            <UserAvatar />
+          </Col>
+        </Row>
+      </Header>
+      <Content style={{ marginTop: screens.xs ? '56px' : '64px' }}>
         <LeaderHome />
       </Content>
     </Layout>
   );
+};
 
   if (loading) {
     return (

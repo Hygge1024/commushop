@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Button, Card, message } from 'antd';
+import { Form, Input, Button, Card, message, Alert } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import config from '../../utils/config';
@@ -108,6 +108,22 @@ const Login = () => {
         }}>
             <Card style={{ width: 400 }}>
                 <h2 style={{ textAlign: 'center', marginBottom: 24 }}>CommuShop 登录</h2>
+                {/* 提示框，方便用户登录体验 */}
+                <Alert
+                    message="温馨提示"
+                    description={
+                        <div>
+                            <p>测试账号信息：</p>
+                            <p>管理员账号：1001（密码：123456）</p>
+                            <p>普通消费者：2001（密码：123456）</p>
+                            <p>团长账号：3001（密码：123456）</p>
+                        </div>
+                    }
+                    type="info"
+                    showIcon
+                    style={{ marginBottom: 24 }}
+                />
+                
                 <Form
                     name="login"
                     onFinish={onFinish}
