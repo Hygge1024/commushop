@@ -1,5 +1,6 @@
 package org.lt.commushop.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.lt.commushop.utils.JwtTokenUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -72,7 +73,7 @@ public class SecurityConfig {
                 data.put("message", "登录成功");
                 result.put("data", data);
 
-                response.getWriter().write(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(result));
+                response.getWriter().write(new ObjectMapper().writeValueAsString(result));
             })
             .failureHandler((request, response, exception) -> {
                 response.setContentType("application/json;charset=utf-8");

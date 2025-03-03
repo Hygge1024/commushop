@@ -63,7 +63,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             relationWrapper.eq(ProductCategoryRelationship::getCategoryId, categoryId);
             List<ProductCategoryRelationship> relationships = productCategoryRelationshipMapper.selectList(relationWrapper);
             // 如果该类别下没有商品，直接返回空页
-            // 如果该类别下没有商品，直接返回空页
             if (relationships.isEmpty()) {
                 return page;
             }
