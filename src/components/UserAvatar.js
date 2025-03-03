@@ -1,41 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { Avatar, Dropdown, message } from 'antd';
-import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { UserOutlined, LogoutOutlined ,CopyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-// import axios from '../utils/axios';
-// import config from '../utils/config';
 import { userService } from '../services/userService';
 const UserAvatar = () => {
   const [userInfo, setUserInfo] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const username = localStorage.getItem('username'); // 从登录时保存的信息中获取用户名
-    if (username) {
-      fetchUserInfo(username);
-    }
-  }, []);
-
-  // 获取用户信息
-  const fetchUserInfo = async (username) => {
+  
+  const fetchUserInfo = async () => {
     try {
-      // const response = await axios.get(`http://localhost:8080/api/userInfo/${username}`);
-      console.log('Calling API with params:', username);
-
-      const response = await userService.getUserInfo(username);
-
-      console.log('用户信息响应:', response.data);
-
-      if (response.success) {
-        setUserInfo(response.data);
-      } else {
-        message.error('获取用户信息失败: ' + response.message);
+      const username = localStorage.getItem('username');
+      if (username) {
+        const response = await userService.getUserInfo(username);
+        if (response.success) {
+          setUserInfo(response.data);
+        }
       }
     } catch (error) {
-      console.error('获取用户信息错误:', error);
-      message.error('获取用户信息失败');
+      console.error('获取用户信息失败:', error);
     }
   };
+
+  useEffect(() => {
+    fetchUserInfo();
+
+    // 监听用户信息更新事件
+    const handleUserInfoUpdate = () => {
+      fetchUserInfo();
+    };
+
+    window.addEventListener('userInfoUpdate', handleUserInfoUpdate);
+
+    return () => {
+      window.removeEventListener('userInfoUpdate', handleUserInfoUpdate);
+    };
+  }, []);
 
   const handleLogout = () => {
     // 清除所有localStorage数据
@@ -49,8 +48,28 @@ const UserAvatar = () => {
     message.success('已退出登录');
     navigate('/login');
   };
+  const handleCopyToken = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigator.clipboard.writeText(token)
+        .then(() => {
+          message.success('Token已复制到剪贴板');
+        })
+        .catch(() => {
+          message.error('复制失败，请手动复制');
+        });
+    } else {
+      message.error('未找到Token信息');
+    }
+  };
 
   const items = [
+    {
+      key: 'copyToken',
+      icon: <CopyOutlined />,
+      label: '复制Token',
+      onClick: handleCopyToken,
+    },
     {
       key: 'logout',
       icon: <LogoutOutlined />,

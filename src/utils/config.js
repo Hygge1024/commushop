@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
         STATISTICS: `${API_BASE_URL}/api/statistics`,
         DETAIL: `/api/details`,
         REGISTER: '/api/register',
+        UPDATE: '/api/updateUserInfo',
     },
     ACTIVITY: {
         LIST: '/api/activity/page',

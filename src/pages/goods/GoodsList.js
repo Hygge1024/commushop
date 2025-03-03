@@ -319,6 +319,25 @@ const GoodsList = () => {
     });
   };
 
+  // 处理批量上传工具下载
+  const handleBatchUploadTool = () => {
+    Modal.confirm({
+      title: '下载批量上传工具',
+      content: '是否下载商品批量上传工具？',
+      okText: '确认下载',
+      cancelText: '取消',
+      onOk: () => {
+        // 创建一个隐藏的a标签来触发下载
+        const link = document.createElement('a');
+        link.href = 'http://8.137.53.253:9000/commoshop/CommuShop%E5%95%86%E5%93%81%E4%B8%8A%E4%BC%A0%E5%B7%A5%E5%85%B7.zip';
+        link.download = 'CommuShop商品上传工具.zip'; // 设置下载文件名
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+  };
+
   // 文件上传改变处理
   const handleFileChange = (info) => {
     if (info.file) {
@@ -604,6 +623,13 @@ const GoodsList = () => {
             onClick={handleAddProduct}
           >
             添加商品
+          </Button>
+          <Button
+            type="default"
+            icon={<UploadOutlined />}
+            onClick={handleBatchUploadTool}
+          >
+            批量上传
           </Button>
         </Space>
       </div>

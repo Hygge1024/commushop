@@ -102,5 +102,15 @@ export const userService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    // 更新用户信息
+    updateUserInfo: async (data) => {
+        try {
+            const response = await api.put(API_ENDPOINTS.USER.UPDATE, data);
+            return response;
+        } catch (error) {
+            throw error;
+        }
     }
 };

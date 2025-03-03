@@ -1,0 +1,88 @@
+.my-reviews-container {
+  padding: 16px;
+}
+
+.reviews-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.reviews-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.product-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.review-tags {
+  margin-top: 8px;
+}
+
+.review-content {
+  color: #666;
+  margin: 16px 0;
+  line-height: 1.6;
+}
+
+.review-images {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.review-images img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.review-images img:hover {
+  transform: scale(1.05);
+}
+
+.review-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+}
+
+.action-text {
+  margin-left: 4px;
+}
+
+.review-time {
+  color: #999;
+  font-size: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .my-reviews-container {
+    padding: 8px;
+  }
+  
+  .review-images img {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

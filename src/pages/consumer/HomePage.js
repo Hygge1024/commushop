@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, Row, Col, Carousel, Input, Button, Tag, Spin, Modal, Descriptions, Badge } from 'antd';
 import { SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { goodsService } from '../../services/goodsService';
+import { categoryService } from '../../services/categoryService';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -11,17 +12,31 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const pageSize = 10;
+  const [categories, setCategories] = useState([]); // 新增categories状态
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const pageSize1 = 10; // 设置较大的size以获取所有数据
+
+  const pageSize2 = 999; // 设置较大的size以获取所有数据
   const containerRef = useRef(null);
 
-  // 分类导航数据
-  const categories = [
-    { icon: '🔥', name: '热门推荐' },
-    { icon: '🎁', name: '本店热卖' },
-    { icon: '⭐', name: '优选新品' },
-    { icon: '🌐', name: '网红爆品' },
-    { icon: '💰', name: '天天特价' },
-  ];
+  // 类别图标映射
+  const categoryIcons = {
+    '餐饮美食': '🍽️',
+    '生鲜食品': '🥬',
+    '日用百货': '🏠',
+    '服装鞋帽': '👔',
+    '美容护肤': '💄',
+    '休闲娱乐': '🎮',
+    '旅游出行': '✈️',
+    '教育培训': '📚',
+    '电子产品': '📱',
+    '儿童用品': '🧸',
+    '健康保健': '💪',
+    '节日礼品': '🎁',
+    '即食食品': '🥡',
+    '汽车服务': '🚗',
+  };
 
   // 加载商品数据
   const loadProducts = useCallback(async (page = 1) => {
@@ -31,7 +46,7 @@ const HomePage = () => {
       setLoading(true);
       const response = await goodsService.getGoodsList({
         current: page,
-        size: pageSize
+        size: pageSize1
       });
 
       const newProducts = response.data.records || [];
@@ -43,7 +58,7 @@ const HomePage = () => {
       }
 
       // 判断是否还有更多数据
-      setHasMore(newProducts.length === pageSize);
+      setHasMore(newProducts.length === pageSize1);
       setCurrentPage(page);
     } catch (error) {
       console.error('Failed to load products:', error);
@@ -68,15 +83,78 @@ const HomePage = () => {
     setModalVisible(true);
   };
 
-  // 格式化时间
-  // const formatDate = (dateString) => {
-  //   if (!dateString) return '';
-  //   return new Date(dateString).toLocaleString('zh-CN');
-  // };
+  // 获取分类数据
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryService.getActiveCategories();
+      if (response.code === 200) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error('获取分类列表失败:', error);
+    }
+  };
 
-  // 初始加载
+  // 搜索商品
+  const handleSearch = async (value) => {
+    setSearchValue(value);
+    setSelectedCategory(null); // 清除已选类别
+    try {
+      setLoading(true);
+      const response = await goodsService.getGoodsList({
+        current: 1,
+        size: pageSize2,
+        productName: value
+      });
+      
+      if (response.code === 200) {
+        setProducts(response.data.records || []);
+        setHasMore(false); // 禁用无限滚动，因为我们已经获取了所有数据
+      }
+    } catch (error) {
+      console.error('搜索商品失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理类别点击
+  const handleCategoryClick = async (category) => {
+    setSelectedCategory(category);
+    setSearchValue(''); // 清除搜索框的值
+    try {
+      setLoading(true);
+      console.log("点击的CategotyID"+category.categoryId);
+      const response = await goodsService.getGoodsList({
+        current: 1,
+        size: pageSize2,
+        categoryId: category.categoryId
+      });
+      
+      if (response.code === 200) {
+        setProducts(response.data.records || []);
+        setHasMore(false); // 禁用无限滚动，因为我们已经获取了所有数据
+      }
+    } catch (error) {
+      console.error('按类别查询商品失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 重置筛选
+  const resetFilters = () => {
+    setSearchValue('');
+    setSelectedCategory(null);
+    setCurrentPage(1);
+    setHasMore(true);
+    loadProducts(1);
+  };
+
+  // 初始化数据
   useEffect(() => {
     loadProducts(1);
+    fetchCategories(); // 获取分类数据
   }, []);
 
   // 添加滚动监听
@@ -96,6 +174,8 @@ const HomePage = () => {
           placeholder="搜索商品名称"
           prefix={<SearchOutlined />}
           className="search-input"
+          value={searchValue}
+          onChange={(e) => handleSearch(e.target.value)}
         />
       </div>
 
@@ -111,16 +191,16 @@ const HomePage = () => {
 
       {/* 分类导航 */}
       <div className="category-nav">
-        <Row gutter={16} justify="space-around">
+        <div className="category-scroll">
           {categories.map((category, index) => (
-            <Col key={index}>
-              <div className="category-item">
-                <span className="category-icon">{category.icon}</span>
-                <span>{category.name}</span>
+            <div key={category.categoryId || index} className="category-item" onClick={() => handleCategoryClick(category)}>
+              <div className="category-icon">
+                {categoryIcons[category.categoryName] || '📦'}
               </div>
-            </Col>
+              <span className="category-name">{category.categoryName}</span>
+            </div>
           ))}
-        </Row>
+        </div>
       </div>
 
       {/* 商品列表 */}
@@ -168,7 +248,8 @@ const HomePage = () => {
                   </div>
                   <Button 
                     type="primary" 
-                    size="small" 
+                    className="cart-button"
+                    size={window.innerWidth < 576 ? 'small' : window.innerWidth < 992 ? 'middle' : 'large'}
                     icon={<ShoppingCartOutlined />}
                     onClick={(e) => {
                       e.stopPropagation();

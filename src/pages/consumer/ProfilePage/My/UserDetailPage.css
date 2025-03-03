@@ -1,0 +1,96 @@
+.user-detail-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 120px);
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  color: #1890ff;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  opacity: 0.8;
+  background-color: #f0f8ff;
+}
+
+.user-detail-card {
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-detail-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.user-detail-header h2 {
+  margin: 16px 0 8px;
+  color: #333;
+}
+
+.user-id {
+  color: #666;
+  margin: 0;
+}
+
+.user-detail-form {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.user-detail-form .ant-form-item {
+  margin-bottom: 24px;
+}
+
+.ant-form-item-label > label {
+  font-weight: 500;
+}
+
+.ant-input-prefix {
+  color: #1890ff;
+  margin-right: 8px;
+}
+
+.ant-btn {
+  height: 40px;
+  font-size: 16px;
+}
+
+.ant-radio-group {
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  .user-detail-container {
+    padding: 12px;
+  }
+  
+  .user-detail-card {
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
