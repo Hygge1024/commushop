@@ -1,6 +1,5 @@
 package org.lt.commushop.controller;
 
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -24,7 +23,7 @@ import java.util.List;
 
 /**
  * <p>
- *  前端控制器
+ * 前端控制器
  * </p>
  *
  * @author tao
@@ -38,61 +37,59 @@ public class UserController {
     @Autowired
     private IUserService userService;
 
-
     @ApiOperation(value = "登录接口")
     @RequestMapping("/login-success")
-    public String loginSuccesss(){
+    public String loginSuccesss() {
         return getUserName() + "登录成功";
     }
 
-    @ApiOperation(value ="根据用户账号查询用户信息")
+    @ApiOperation(value = "根据用户账号查询用户信息")
     @GetMapping("/users/{username}")
-    public User getUsers(@PathVariable String username){
+    public User getUsers(@PathVariable String username) {
         System.out.println("YES");
         return userService.getUserList(username);
     }
 
-
-    @ApiOperation(value ="权限测试1接口")
+    @ApiOperation(value = "权限测试1接口")
     @GetMapping("/admin")
-    public String s1(){
-        return  getUserName() + "当问管理员资源";
+    public String s1() {
+        return getUserName() + "当问管理员资源";
     }
-    @ApiOperation(value ="权限测试2接口")
+
+    @ApiOperation(value = "权限测试2接口")
     @GetMapping("/user")
-    public String s2(){
-        return  getUserName() + "当问用户资源";
+    public String s2() {
+        return getUserName() + "当问用户资源";
     }
 
-    @ApiOperation(value ="登录失败")
+    @ApiOperation(value = "登录失败")
     @RequestMapping("/login-fail")
-    public String s3(){
-        return  "非常抱歉，您的账号或密码错误！！！";
+    public String s3() {
+        return "非常抱歉，您的账号或密码错误！！！";
     }
 
-
-    //获取当前用户的信息
-    private String getUserName(){
+    // 获取当前用户的信息
+    private String getUserName() {
         String username = null;
-        //当前认证通过的用户身份
+        // 当前认证通过的用户身份
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        //用户身份
+        // 用户身份
         Object principal = authentication.getPrincipal();
-        if(principal == null) {
+        if (principal == null) {
             username = "匿名";
         }
-        if(principal instanceof UserDetails){//如果当前principal是UserDetail类型
+        if (principal instanceof UserDetails) {// 如果当前principal是UserDetail类型
             UserDetails userDetails = (UserDetails) principal;
             username = userDetails.getUsername();
-        }else{
+        } else {
             username = principal.toString();
         }
         return username;
     }
 
-    @ApiOperation(value ="获取所有用户信息")
+    @ApiOperation(value = "获取所有用户信息")
     @GetMapping("/userInfo")
-    public Result<List<User>> getUserInfo(){
+    public Result<List<User>> getUserInfo() {
         List<User> users = userService.getUserInfo();
         if (users != null && !users.isEmpty()) {
             return Result.success(users);
@@ -100,7 +97,8 @@ public class UserController {
             return Result.error("未找到用户信息");
         }
     }
-    @ApiOperation(value ="获取单个用户信息")
+
+    @ApiOperation(value = "获取单个用户信息")
     @GetMapping("/userInfo/{username}")
     public Result<User> getUserInfo(@PathVariable String username) {
         User user = userService.getUserName(username);
@@ -110,6 +108,7 @@ public class UserController {
             return Result.error("未找到该用户");
         }
     }
+
     @ApiOperation(value = "获取所有用户及其角色和地址信息")
     @GetMapping("/userDetails")
     public Result<List<UserRoleAddress>> getAllUserDetails() {
@@ -120,6 +119,7 @@ public class UserController {
             return Result.error("未找到all用户详细信息");
         }
     }
+
     @ApiOperation(value = "根据用户名查询用户及其角色和地址信息")
     @GetMapping("/details/{username}")
     public Result<UserRoleAddress> getUserDetails(@PathVariable String username) {
@@ -130,6 +130,7 @@ public class UserController {
             return Result.error("未找到该用户的详细信息");
         }
     }
+
     @ApiOperation(value = "注册用户")
     @PostMapping("/register")
     public Result<User> registerUser(@RequestBody UserRegistrationDTO userRegistrationDTO) {
@@ -140,18 +141,21 @@ public class UserController {
             return Result.error(e.getMessage()); // 返回错误信息
         }
     }
+
     @ApiOperation(value = "添加用户地址")
     @PostMapping("/{username}/addAddress")
     public Result<User> addAddress(@PathVariable String username, @RequestBody UserAddress userAddress) {
         User user = userService.addAddress(username, userAddress);
         return Result.success(user);
     }
+
     @ApiOperation(value = "删除用户地址")
     @DeleteMapping("/{username}/deleteAddress/{addressId}")
     public Result<User> deleteAddress(@PathVariable String username, @PathVariable Integer addressId) {
         User user = userService.deleteAddress(username, addressId);
         return Result.success(user);
     }
+
     @ApiOperation(value = "更新用户信息")
     @PutMapping("/updateUserInfo")
     public Result<User> updateUserInfo(@RequestBody UserRegistrationDTO userRegistrationDTO) {
@@ -169,6 +173,15 @@ public class UserController {
             @ApiParam(value = "手机号") @RequestParam(required = false) String phone) {
 
         return Result.success(userService.getUserPage(current, size, userId, username, phone));
+    }
+
+    @ApiOperation(value = "修改用户密码")
+    @PutMapping("/updatePassword")
+    public Result<Boolean> updatePassword(
+            @ApiParam(value = "用户名", required = true) @RequestParam String username,
+            @ApiParam(value = "原密码", required = true) @RequestParam String oldPassword,
+            @ApiParam(value = "新密码", required = true) @RequestParam String newPassword) {
+        return Result.success(userService.updatePassword(username, oldPassword, newPassword));
     }
 
     @ApiOperation("获取用户统计信息")

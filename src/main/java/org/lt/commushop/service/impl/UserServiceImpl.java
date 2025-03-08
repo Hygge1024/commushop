@@ -11,12 +11,14 @@ import org.lt.commushop.domain.Hander.UserRoleAddress;
 import org.lt.commushop.domain.entity.*;
 import org.lt.commushop.domain.vo.UserQueryVO;
 import org.lt.commushop.domain.vo.UserStatisticsVO;
+import org.lt.commushop.exception.BusinessException;
 import org.lt.commushop.mapper.*;
 import org.lt.commushop.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,7 +28,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author tao
@@ -46,19 +48,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private PasswordEncoder passwordEncoder;// 引入PasswordEncoder
     @Autowired
-    private GroupBuyingOrderMapper groupBuyingOrderMapper;  // 修改为团购订单Mapper
+    private GroupBuyingOrderMapper groupBuyingOrderMapper; // 修改为团购订单Mapper
 
-    //根据用户账号获取用户信息
+    // 根据用户账号获取用户信息
     @Override
     public User getUserList(String username) {
         List<User> list = userMapper.getUserList(username);
-        log.info("当前用户List为"+list);
+        log.info("当前用户List为" + list);
         User user = null;
-        if(list != null && list.size() == 1){
+        if (list != null && list.size() == 1) {
             user = list.get(0);
-            log.info("当前用户为"+user);
+            log.info("当前用户为" + user);
         }
-        if(user == null){
+        if (user == null) {
             log.info("当前username对应的用户为空");
             return null;
         }
@@ -70,10 +72,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         List<Permission> permissionList = userMapper.getPermissionList(userid);
         List<String> permissions = new ArrayList<>();
         permissionList.forEach(c -> permissions.add(c.getPermissionCode()));
-        //将权限code转换成String数组
+        // 将权限code转换成String数组
         String[] permissionArray = new String[permissions.size()];
         permissions.toArray(permissionArray);
-        log.info("当前用户ID："+userid+"的权限为："+permissionArray);
+        log.info("当前用户ID：" + userid + "的权限为：" + permissionArray);
         return permissionArray;
     }
 
@@ -89,7 +91,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public List<UserRoleAddress> getAllUserRoleAddresses() {
-          // 1. 查询所有用户
+        // 1. 查询所有用户
         List<User> users = userMapper.selectList(null);
 
         if (users.isEmpty()) {
@@ -99,12 +101,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 2. 获取所有用户的 userId
         List<Integer> userIds = users.stream()
                 .map(User::getUserId)
-                .collect(Collectors.toList());//获取所有用户的userId,转换成list
+                .collect(Collectors.toList());// 获取所有用户的userId,转换成list
 
         // 3. 查询 user_role 表，获取 userId 对应的 roleId
         Map<Integer, Integer> userRoleMap = new HashMap<>();
         for (Integer userId : userIds) {
-            List<Integer> roleIds = userRoleMapper.getRoleIdsByUserId(userId);//获取用户角色id,本应用User与Role是一对一关系
+            List<Integer> roleIds = userRoleMapper.getRoleIdsByUserId(userId);// 获取用户角色id,本应用User与Role是一对一关系
             // 这里预留一对多的关系，通过取第一个角色id来表示用户角色来获得用户角色
             if (!roleIds.isEmpty()) {
                 userRoleMap.put(userId, roleIds.get(0)); // 只取第一个角色
@@ -120,28 +122,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 5. 批量查询所有用户地址
         List<UserAddress> addresses = userAddressMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<UserAddress>()
-                        .in("user_id", userIds)
-        );
+                        .in("user_id", userIds));
 
         // 6. 按 userId 分组地址
         Map<Integer, List<UserAddress>> addressMap = addresses.stream()
-                .collect(Collectors.groupingBy(UserAddress::getUserId));//按userId分组地址
+                .collect(Collectors.groupingBy(UserAddress::getUserId));// 按userId分组地址
 
         // 7. 组装 UserRoleAddress 对象
         List<UserRoleAddress> result = new ArrayList<>();
         for (User user : users) {
-            //创建UserRoleAddress对象
+            // 创建UserRoleAddress对象
             UserRoleAddress ura = new UserRoleAddress();
-            //设置用户
+            // 设置用户
             ura.setUser(user);
 
             // 设置角色
-            Integer roleId = userRoleMap.get(user.getUserId());//从用户角色map中获取用户角色id
+            Integer roleId = userRoleMap.get(user.getUserId());// 从用户角色map中获取用户角色id
             Role role = roleMap.get(roleId);
             ura.setRole(role); // 只设置一个 Role 对象
 
             // 设置地址列表
-            List<UserAddress> userAddresses = addressMap.get(user.getUserId());//从地址map中获取用户地址
+            List<UserAddress> userAddresses = addressMap.get(user.getUserId());// 从地址map中获取用户地址
             ura.setUserAddresses(userAddresses != null ? userAddresses : new ArrayList<>());
 
             result.add(ura);
@@ -167,10 +168,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return userRoleAddress;
     }
 
-   @Override
+    @Override
     public User registerUser(UserRegistrationDTO userRegistrationDTO) {
         // 检查用户名是否已存在
-        User existingUser = userMapper.selectOne(new QueryWrapper<User>().eq("username", userRegistrationDTO.getUsername()));
+        User existingUser = userMapper
+                .selectOne(new QueryWrapper<User>().eq("username", userRegistrationDTO.getUsername()));
         if (existingUser != null) {
             throw new IllegalArgumentException("用户名已被注册");
         }
@@ -179,7 +181,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = new User();
         user.setUsername(userRegistrationDTO.getUsername());
 
-       // 使用PasswordEncoder加密密码
+        // 使用PasswordEncoder加密密码
         String encodedPassword = passwordEncoder.encode(userRegistrationDTO.getPassword());
         user.setPassword(encodedPassword); // 存储加密后的密码
         user.setPhoneNumber(userRegistrationDTO.getPhoneNumber());
@@ -202,16 +204,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public User addAddress(String username, UserAddress userAddress) {
-          // 根据用户名查找用户
+        // 根据用户名查找用户
         User user = userMapper.selectOne(new QueryWrapper<User>().eq("username", username));
         if (user == null) {
             throw new IllegalArgumentException("用户不存在");
         }
         // 创建UserAddress对象
         userAddress.setUserId(user.getUserId()); // 设置用户ID
-        userAddress.setIsDefault(true); // 设置是否为默认地址
+        userAddress.setIsDefault(false); // 设置是否为默认地址
         userAddressMapper.insert(userAddress);
-        return user;//返回用户地址
+        return user;// 返回用户地址
     }
 
     @Override
@@ -228,10 +230,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         userAddressMapper.delete(new QueryWrapper<UserAddress>().eq("address_id", addressId));
         return user;
     }
+
     @Override
     public User updateUserInfo(UserRegistrationDTO userRegistrationDTO) {
         // 检查用户是否存在
-        User existingUser = userMapper.selectOne(new QueryWrapper<User>().eq("username", userRegistrationDTO.getUsername()));
+        User existingUser = userMapper
+                .selectOne(new QueryWrapper<User>().eq("username", userRegistrationDTO.getUsername()));
         if (existingUser == null) {
             throw new IllegalArgumentException("用户不存在"); // 或者返回一个自定义的错误响应
         }
@@ -249,7 +253,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
 
         // 保存更新后的用户信息
-        userMapper.updateById(existingUser);//更新用户信息
+        userMapper.updateById(existingUser);// 更新用户信息
 
         // 更新用户角色信息
         if (userRegistrationDTO.getRoleId() != null) {
@@ -260,15 +264,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             UserRole userRole = new UserRole();
             userRole.setUserId(existingUser.getUserId());
             userRole.setRoleId(userRegistrationDTO.getRoleId());
-            userRoleMapper.insert(userRole);//插入新的用户角色信息
+            userRoleMapper.insert(userRole);// 插入新的用户角色信息
         }
 
         return existingUser; // 返回更新后的用户信息
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Boolean updatePassword(String username, String oldPassword, String newPassword) {
+        // 1.参数校验
+        if (StringUtils.isEmpty(username) || StringUtils.isEmpty(oldPassword) || StringUtils.isEmpty(newPassword)) {
+            throw new BusinessException("修改密码失败：参数不能为空");
+        }
+
+        // 2.查询用户是否存在
+        User user = userMapper.selectOne(new QueryWrapper<User>().eq("username", username));
+        if (user == null) {
+            throw new BusinessException("修改密码失败：用户不存在");
+        }
+
+        // 3.验证原密码是否正确
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessException("修改密码失败：原密码错误");
+        }
+
+        // 4.加密新密码并更新
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedNewPassword);
+
+        // 5.更新用户信息
+        return userMapper.updateById(user) > 0;
+    }
+
     @Override
     public IPage<UserQueryVO> getUserPage(Integer current, Integer size,
-                                          Long userId, String username, String phone) {
+            Long userId, String username, String phone) {
         // 1. 创建分页对象
         Page<User> page = new Page<>(current, size);
 
@@ -383,13 +414,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 3. 获取活跃用户数（近14天有订单的用户）
         LocalDateTime twoWeeksAgo = LocalDateTime.now().minusDays(14).withHour(0).withMinute(0).withSecond(0);
         LocalDateTime now = LocalDateTime.now();
-        
+
         // 使用selectObjs来获取去重后的用户ID列表
         LambdaQueryWrapper<GroupBuyingOrder> orderWrapper = new LambdaQueryWrapper<>();
         orderWrapper.select(GroupBuyingOrder::getUserId)
-                   .between(GroupBuyingOrder::getCreateTime, twoWeeksAgo, now)
-                   .eq(GroupBuyingOrder::getIsDeleted, 0);
-        
+                .between(GroupBuyingOrder::getCreateTime, twoWeeksAgo, now)
+                .eq(GroupBuyingOrder::getIsDeleted, 0);
+
         List<Object> userIds = groupBuyingOrderMapper.selectObjs(orderWrapper);
         // 使用Set去重
         Integer activeUsers = new HashSet<>(userIds).size();
@@ -405,17 +436,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         // 5. 计算性别比例
         UserStatisticsVO.GenderRatio genderRatio = new UserStatisticsVO.GenderRatio();
-        
+
         // 获取男性用户数量
         Long maleCount = this.count(new LambdaQueryWrapper<User>()
                 .eq(User::getGender, 1));
         genderRatio.setMaleCount(Math.toIntExact(maleCount));
-        
+
         // 获取女性用户数量
         Long femaleCount = this.count(new LambdaQueryWrapper<User>()
                 .eq(User::getGender, 0));
         genderRatio.setFemaleCount(Math.toIntExact(femaleCount));
-        
+
         // 计算比例
         long totalWithGender = maleCount + femaleCount;
         if (totalWithGender > 0) {
@@ -446,8 +477,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Map<LocalDate, Long> dailyCounts = users.stream()
                 .collect(Collectors.groupingBy(
                         user -> user.getCreatedTime().toLocalDate(),
-                        Collectors.counting()
-                ));
+                        Collectors.counting()));
 
         // 填充5天的数据（包括没有新用户的日期）
         for (int i = 0; i < 5; i++) {

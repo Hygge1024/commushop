@@ -38,22 +38,27 @@ public interface IUserService extends IService<User> {
     User addAddress(String username, UserAddress userAddress);
 
     User deleteAddress(String username, Integer addressId);
+
     User updateUserInfo(UserRegistrationDTO userRegistrationDTO);
+
+    Boolean updatePassword(String username, String oldPassword, String newPassword);
 
     /**
      * 分页查询用户信息
-     * @param current 当前页
-     * @param size 每页大小
-     * @param userId 用户ID
+     * 
+     * @param current  当前页
+     * @param size     每页大小
+     * @param userId   用户ID
      * @param username 用户名
-     * @param phone 手机号
+     * @param phone    手机号
      * @return 用户分页数据
      */
-    IPage<UserQueryVO> getUserPage(Integer current, Integer size, 
+    IPage<UserQueryVO> getUserPage(Integer current, Integer size,
             Long userId, String username, String phone);
 
     /**
      * 获取用户统计信息
+     * 
      * @return 用户统计信息
      */
     UserStatisticsVO getUserStatistics();
