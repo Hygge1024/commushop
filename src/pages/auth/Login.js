@@ -3,8 +3,8 @@ import { Form, Input, Button, Card, message, Alert } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import config from '../../utils/config';
-import  api  from '../../services/api';
-import  {userService}  from '../../services/userService';
+import api from '../../services/api';
+import { userService } from '../../services/userService';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -14,10 +14,10 @@ const Login = () => {
     const onFinish = async (values) => {
         console.log("开始登录");
         try {
-             // 清理之前的登录状态
-             localStorage.clear();
-             sessionStorage.clear();
-             console.log("开始提交");
+            // 清理之前的登录状态
+            localStorage.clear();
+            sessionStorage.clear();
+            console.log("开始提交");
             const response = await api.post(config.api.login, null, {
                 params: {
                     username: values.username,
@@ -34,18 +34,17 @@ const Login = () => {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('refreshToken', response.data.refreshToken);
                 localStorage.setItem('username', values.username);
-
                 //获取用户详情(进行身份判断)
-                try{
+                try {
                     // console.log("开始进行身份认证");
                     const userResponse = await userService.getUserDetail(values.username);
                     // console.log("用户认证结束");
                     const roleID = userResponse.data.role.roleId;
-                    console.log("当前用户:"+values.username+"的角色ID是"+roleID);
-                     // 保存用户角色ID
+                    console.log("当前用户:" + values.username + "的角色ID是" + roleID);
+                    // 保存用户角色ID
                     localStorage.setItem('roleId', roleID.toString());
-               
-                    switch(roleID){
+
+                    switch (roleID) {
                         case 1:
                             navigate('/dashboard', { replace: true });
                             window.location.reload();
@@ -69,7 +68,7 @@ const Login = () => {
                     }
                     // 统一跳转到根路由，让App.js根据roleID处理具体跳转
                     navigate('/', { replace: true });
-                }catch{
+                } catch {
                     message.error('获取用户信息失败');
                     console.error('获取用户信息失败');
                 }
@@ -118,14 +117,14 @@ const Login = () => {
                             <p>管理员账号：1001,密码：123456</p>
                             <p>(支持手机端)</p>
                             <p>普通消费者：2001,密码：123456</p>
-                            <p>团长账号：3001,密码：123456</p>
+                            <p>团长账号(还是空白)：3001,密码：123456</p>
                         </div>
                     }
                     type="info"
                     showIcon
                     style={{ marginBottom: 24 }}
                 />
-                
+
                 <Form
                     name="login"
                     onFinish={onFinish}

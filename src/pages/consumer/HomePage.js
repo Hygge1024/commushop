@@ -1,8 +1,28 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, Row, Col, Carousel, Input, Button, Tag, Spin, Modal, Descriptions, Badge } from 'antd';
-import { SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { 
+  Card, 
+  Row, 
+  Col, 
+  Carousel, 
+  Input, 
+  Button, 
+  Tag, 
+  Spin, 
+  Modal, 
+  Descriptions, 
+  Badge, 
+  message, 
+  Typography, 
+  Space
+} from 'antd';
+import { 
+  SearchOutlined, 
+  ShoppingCartOutlined
+} from '@ant-design/icons';
 import { goodsService } from '../../services/goodsService';
 import { categoryService } from '../../services/categoryService';
+import { cartService } from '../../services/cartService';
+import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -10,15 +30,13 @@ const HomePage = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [categories, setCategories] = useState([]); // 新增categories状态
+  const [categories, setCategories] = useState([]); 
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const pageSize1 = 10; // 设置较大的size以获取所有数据
-
-  const pageSize2 = 999; // 设置较大的size以获取所有数据
+  const pageSize1 = 10; 
+  const pageSize2 = 999; 
   const containerRef = useRef(null);
+  const navigate = useNavigate();
 
   // 类别图标映射
   const categoryIcons = {
@@ -41,7 +59,7 @@ const HomePage = () => {
   // 加载商品数据
   const loadProducts = useCallback(async (page = 1) => {
     if (loading || !hasMore) return;
-    
+
     try {
       setLoading(true);
       const response = await goodsService.getGoodsList({
@@ -50,7 +68,7 @@ const HomePage = () => {
       });
 
       const newProducts = response.data.records || [];
-      
+
       if (page === 1) {
         setProducts(newProducts);
       } else {
@@ -79,8 +97,7 @@ const HomePage = () => {
 
   // 处理商品点击
   const handleProductClick = (product) => {
-    setSelectedProduct(product);
-    setModalVisible(true);
+    navigate(`/consumer/product/${product.productId}`);
   };
 
   // 获取分类数据
@@ -98,7 +115,7 @@ const HomePage = () => {
   // 搜索商品
   const handleSearch = async (value) => {
     setSearchValue(value);
-    setSelectedCategory(null); // 清除已选类别
+    setSelectedCategory(null); 
     try {
       setLoading(true);
       const response = await goodsService.getGoodsList({
@@ -106,10 +123,10 @@ const HomePage = () => {
         size: pageSize2,
         productName: value
       });
-      
+
       if (response.code === 200) {
         setProducts(response.data.records || []);
-        setHasMore(false); // 禁用无限滚动，因为我们已经获取了所有数据
+        setHasMore(false); 
       }
     } catch (error) {
       console.error('搜索商品失败:', error);
@@ -121,19 +138,19 @@ const HomePage = () => {
   // 处理类别点击
   const handleCategoryClick = async (category) => {
     setSelectedCategory(category);
-    setSearchValue(''); // 清除搜索框的值
+    setSearchValue(''); 
     try {
       setLoading(true);
-      console.log("点击的CategotyID"+category.categoryId);
+      console.log("点击的CategotyID" + category.categoryId);
       const response = await goodsService.getGoodsList({
         current: 1,
         size: pageSize2,
         categoryId: category.categoryId
       });
-      
+
       if (response.code === 200) {
         setProducts(response.data.records || []);
-        setHasMore(false); // 禁用无限滚动，因为我们已经获取了所有数据
+        setHasMore(false); 
       }
     } catch (error) {
       console.error('按类别查询商品失败:', error);
@@ -154,7 +171,7 @@ const HomePage = () => {
   // 初始化数据
   useEffect(() => {
     loadProducts(1);
-    fetchCategories(); // 获取分类数据
+    fetchCategories(); 
   }, []);
 
   // 添加滚动监听
@@ -165,6 +182,33 @@ const HomePage = () => {
       return () => container.removeEventListener('scroll', handleScroll);
     }
   }, [handleScroll]);
+
+  //添加购物车
+  const handleAddToCart = async (productId, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    try {
+      const userId = parseInt(localStorage.getItem('userId'), 10);
+      if (!userId) {
+        message.error('请先登录');
+        return;
+      }
+      const response = await cartService.addCart({
+        userId: userId,
+        productId: productId,
+        amount: 1
+      });
+      if (response.code === 200) {
+        message.success('商品添加成功');
+      } else {
+        message.error(response.message || '商品添加失败');
+      }
+    } catch (error) {
+      console.error('添加购物车失败:', error);
+      message.error(error.message || '添加购物车失败');
+    }
+  };
 
   return (
     <div className="home-container" ref={containerRef}>
@@ -205,59 +249,131 @@ const HomePage = () => {
 
       {/* 商品列表 */}
       <div className="products-grid">
-        <Row gutter={[16, 16]}>
+        <Row gutter={[8, 16]}>
           {products.map(product => (
             <Col xs={12} sm={12} md={8} lg={6} key={product.id}>
               <Card
                 hoverable={!product.isDeleted}
+                bodyStyle={{ padding: '8px' }}
                 cover={
                   product.imageUrl ? (
-                    <img 
-                      alt={product.productName} 
-                      src={product.imageUrl}
-                      style={{
-                        width: '100%',
-                        height: 200,
-                        objectFit: 'cover'
-                      }}
-                    />
+                    <div style={{ position: 'relative', paddingTop: '100%' }}>
+                      <img
+                        alt={product.productName}
+                        src={product.imageUrl}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                      <div className="product-tags" style={{ 
+                        position: 'absolute', 
+                        top: '8px', 
+                        left: '8px',
+                        display: 'flex',
+                        gap: '4px'
+                      }}>
+                        {product.isHot && <Tag color="red">热销</Tag>}
+                        {product.isFreeShipping && <Tag color="green">包邮</Tag>}
+                      </div>
+                    </div>
                   ) : (
-                    <div className="no-image">暂无图片</div>
+                    <div className="no-image" style={{ 
+                      paddingTop: '100%',
+                      position: 'relative',
+                      background: '#f5f5f5',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <span style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)'
+                      }}>暂无图片</span>
+                    </div>
                   )
                 }
                 className={`product-card ${product.isDeleted ? 'product-sold-out' : ''}`}
                 onClick={() => !product.isDeleted && handleProductClick(product)}
               >
-                <div className="product-tags">
-                  {product.isHot && <Tag color="red">热销</Tag>}
-                  {product.isFreeShipping && <Tag color="green">包邮</Tag>}
-                </div>
-                <div className="product-title">{product.productName.toUpperCase()}</div>
-                {product.productDesc && 
-                  <div className="product-description">{product.productDesc.toLowerCase()}</div>
-                }
-                <div className="product-price">
-                  <div className="price-info">
-                    <div className="current-price">
-                      <span className="price-symbol">¥</span>
-                      <span className="price-value">{product.groupPrice.toFixed(2)}</span>
-                    </div>
-                    <div className="original-price">
-                      ¥{product.originalPrice.toFixed(2)}
-                    </div>
+                <div style={{ minHeight: '88px' }}>
+                  <div style={{ 
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '4px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: '2',
+                    WebkitBoxOrient: 'vertical',
+                    lineHeight: '1.2'
+                  }}>
+                    {product.productName}
                   </div>
-                  <Button 
-                    type="primary" 
-                    className="cart-button"
-                    size={window.innerWidth < 576 ? 'small' : window.innerWidth < 992 ? 'middle' : 'large'}
-                    icon={<ShoppingCartOutlined />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // 处理加入购物车逻辑
-                    }}
-                  >
-                    加入购物车
-                  </Button>
+                  {product.productDesc && (
+                    <div style={{ 
+                      fontSize: '12px',
+                      color: '#666',
+                      marginBottom: '4px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: '1',
+                      WebkitBoxOrient: 'vertical'
+                    }}>
+                      {product.productDesc}
+                    </div>
+                  )}
+                  <div style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: '8px'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ 
+                        color: '#ff4d4f',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        lineHeight: '1'
+                      }}>
+                        ¥{product.groupPrice.toFixed(2)}
+                      </div>
+                      <div style={{ 
+                        fontSize: '12px',
+                        color: '#999',
+                        textDecoration: 'line-through',
+                        marginTop: '2px'
+                      }}>
+                        ¥{product.originalPrice.toFixed(2)}
+                      </div>
+                    </div>
+                    <Button
+                      type="primary"
+                      size="middle"
+                      icon={<ShoppingCartOutlined style={{ fontSize: '18px' }} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(product.productId, e);
+                      }}
+                      style={{
+                        borderRadius: '20px',
+                        padding: '0 16px',
+                        height: '40px',
+                        width: '40px',
+                        minWidth: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    />
+                  </div>
                 </div>
               </Card>
             </Col>
@@ -271,84 +387,11 @@ const HomePage = () => {
           <Spin />
         </div>
       )}
-      
+
       {/* 没有更多数据的提示 */}
       {!hasMore && products.length > 0 && (
         <div className="no-more">没有更多商品了</div>
       )}
-
-      {/* 商品详情弹窗 */}
-      <Modal
-        title="商品详情"
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={[
-          <Button 
-            key="cart" 
-            type="primary" 
-            icon={<ShoppingCartOutlined />}
-            onClick={() => {
-              // 处理加入购物车逻辑
-              setModalVisible(false);
-            }}
-          >
-            加入购物车
-          </Button>,
-          <Button key="close" onClick={() => setModalVisible(false)}>
-            关闭
-          </Button>
-        ]}
-        width={700}
-      >
-        {selectedProduct && (
-          <div className="product-detail">
-            <div className="product-detail-image">
-              {selectedProduct.imageUrl ? (
-                <img 
-                  src={selectedProduct.imageUrl} 
-                  alt={selectedProduct.productName}
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: 300,
-                    objectFit: 'contain'
-                  }}
-                />
-              ) : (
-                <div className="no-image">暂无图片</div>
-              )}
-            </div>
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="商品名称" span={2}>
-                {selectedProduct.productName}
-              </Descriptions.Item>
-              <Descriptions.Item label="商品描述" span={2}>
-                {selectedProduct.productDesc}
-              </Descriptions.Item>
-              <Descriptions.Item label="原价">
-                ¥{selectedProduct.originalPrice.toFixed(2)}
-              </Descriptions.Item>
-              <Descriptions.Item label="团购价">
-                <span className="group-price">
-                  ¥{selectedProduct.groupPrice.toFixed(2)}
-                </span>
-              </Descriptions.Item>
-              <Descriptions.Item label="库存">
-                {selectedProduct.stockQuantity}
-              </Descriptions.Item>
-              <Descriptions.Item label="状态">
-                <Badge status="processing" text="在售" />
-              </Descriptions.Item>
-              <Descriptions.Item label="商品分类" span={2}>
-                {selectedProduct.categories?.map(category => (
-                  <Tag key={category.categoryId} color="blue">
-                    {category.categoryName}
-                  </Tag>
-                ))}
-              </Descriptions.Item>
-            </Descriptions>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };

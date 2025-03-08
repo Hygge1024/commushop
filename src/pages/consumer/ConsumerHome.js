@@ -1,11 +1,11 @@
 import React from 'react';
 import { Layout, Grid, Tabs } from 'antd';
-import { useNavigate, useLocation, Routes, Route ,Navigate } from 'react-router-dom';
-import { 
-  HomeOutlined, 
-  ThunderboltOutlined, 
-  ShoppingOutlined, 
-  UserOutlined 
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  HomeOutlined,
+  ThunderboltOutlined,
+  ShoppingOutlined,
+  UserOutlined
 } from '@ant-design/icons';
 import './ConsumerHome.css';
 
@@ -15,6 +15,9 @@ import FlashSalePage from './FlashSalePage';
 import ProfilePage from './ProfilePage';
 import UserDetailPage from './ProfilePage/My/UserDetailPage';
 import CartPage from './CartPage';
+import Checkout from './CartOrder/checkout';
+import ProductDetailPage from './ProductDetailPage';
+
 // 导入订单相关页面
 import PendingPayment from './ProfilePage/Orders/PendingPayment';
 import PendingDelivery from './ProfilePage/Orders/PendingDelivery';
@@ -36,7 +39,7 @@ const ConsumerHome = () => {
   const screens = useBreakpoint();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const tabs = [
     {
       key: '/consumer/home',
@@ -55,6 +58,7 @@ const ConsumerHome = () => {
           <span>活动秒杀</span>
         </div>
       )
+
     },
     {
       key: '/consumer/cart',
@@ -86,7 +90,9 @@ const ConsumerHome = () => {
           <Route path="/consumer/cart" element={<CartPage />} />
           <Route path="/consumer/profile" element={<ProfilePage />} />
           <Route path="/consumer/my/detail" element={<UserDetailPage />} />
-          
+          <Route path="/consumer/checkout" element={<Checkout />} />
+          <Route path="/consumer/product/:productId" element={<ProductDetailPage />} />
+
           {/* 订单中心路由 */}
           <Route path="/consumer/orders/all" element={<OrdersPage />} />
           <Route path="/consumer/orders/pending-payment" element={<PendingPayment />} />
@@ -102,11 +108,11 @@ const ConsumerHome = () => {
           <Route path="/consumer/basic-services/change-password" element={<ChangePassword />} />
           <Route path="/consumer/basic-services/settings" element={<Settings />} />
           <Route path="/consumer/basic-services/my-reviews" element={<MyReviews />} />
-          
+
           <Route path="/consumer/" element={<Navigate to="home" replace />} />
         </Routes>
       </div>
-      
+
       <div className="bottom-tab-bar">
         <Tabs
           activeKey={location.pathname}

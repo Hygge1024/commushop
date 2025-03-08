@@ -41,7 +41,7 @@ const FlashSalePage = () => {
     try {
       const response = await activityService.getActivityList({
         current: 1,
-        size: 10,
+        size: 999,
       });
 
       if (response.code === 200 && response.data) {
@@ -179,7 +179,7 @@ const FlashSalePage = () => {
               <div className="activity-header">
                 <div className="activity-title">
                   <ThunderboltOutlined className="flash-icon" />
-                  <Title level={4}>{activity.activityName}</Title>
+                  <Title level={4}>{activity.activityName}（没接接口）</Title>
                 </div>
                 <div className="activity-countdown">
                   <ClockCircleOutlined />

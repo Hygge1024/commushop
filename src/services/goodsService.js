@@ -9,6 +9,18 @@ export const goodsService = {
         return api.get(API_ENDPOINTS.GOODS.LIST, { params });
     },
 
+    //查询当个商品
+    getGoodsDetail: async (productId) => {
+        try {
+            // 直接使用API_ENDPOINTS.GOODS.DETAIL函数生成URL
+            const url = API_ENDPOINTS.GOODS.DETAIL(productId);
+            const response = await api.get(url);
+            return response;
+        } catch (error) {
+            console.error('获取商品详情失败:', error);
+            throw error;
+        }
+    },
     // 上传商品
     uploadProduct: (formData) => {
         return api.post(API_ENDPOINTS.GOODS.UPLOAD, formData, {
@@ -40,9 +52,4 @@ export const goodsService = {
     deleteGoods: (id) => {
         return api.delete(`${API_ENDPOINTS.GOODS.DELETE}/${id}`);
     },
-
-    // 获取商品详情
-    getGoodsDetail: (id) => {
-        return api.get(`${API_ENDPOINTS.GOODS.DETAIL}/${id}`);
-    }
 };

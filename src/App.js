@@ -218,6 +218,7 @@ function App() {
                     <Route path="/payments/statistics" element={<PaymentStatistics />} />
                     <Route path="/settings/users" element={<UserList />} />
                     <Route path="/settings/user-statistics" element={<UserStatistics />} />
+                    {/* <Route path="/consumer/product/:productId" element={<ProductDetailPage />} /> */}
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </div>

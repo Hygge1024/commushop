@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  List, 
-  Button, 
-  InputNumber, 
-  Empty, 
-  message, 
+import {
+  Card,
+  List,
+  Button,
+  Input,
+  Empty,
+  message,
   Checkbox,
   Space,
   Modal,
   Typography
 } from 'antd';
-import { 
-  DeleteOutlined, 
+import {
+  DeleteOutlined,
   ShoppingCartOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  CloseOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import './CartPage.css';
+import { cartService } from '../../services/cartService';
+import { productOrderService } from '../../services/productOrderService';
 
 const { Text, Title } = Typography;
 const { confirm } = Modal;
@@ -26,41 +29,80 @@ const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [current, setCurrent] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
   const navigate = useNavigate();
 
-  // 模拟购物车数据
-  const mockCartItems = [
-    {
-      id: 1,
-      name: '精品咖啡豆',
-      price: 68.00,
-      quantity: 1,
-      stock: 100,
-      image: '1894937370343108608.jpg',
-      selected: false
-    },
-    {
-      id: 2,
-      name: '手冲咖啡壶',
-      price: 299.00,
-      quantity: 1,
-      stock: 50,
-      image: '1894937370343108608.jpg',
-      selected: false
+  //获取购物车数据
+  const fetchChartItems = async () => {
+    try {
+      setLoading(true);
+      const userId = parseInt(localStorage.getItem('userId'), 10);
+      if (!userId) {
+        message.error('请先登录');
+        navigate('/login');
+        return;
+      }
+      const response = await cartService.getCartList({
+        userID: userId,
+        page: current,
+        pageSize: pageSize
+      });
+      if (response.code === 200) {
+        // 转换数据格式
+        const formattedItems = response.data.records.map(item => ({
+          id: item.cart.cartId,
+          productId: item.product.productId,
+          name: item.product.productName,
+          description: item.product.productDesc,
+          originalPrice: item.product.originalPrice,
+          price: item.product.groupPrice,
+          quantity: item.cart.amount,
+          stock: item.product.stockQuantity,
+          image: item.product.imageUrl,
+          selected: false,
+          isDeleted: item.product.isDeleted === 1
+        }));
+        // 反转数组顺序，使最新添加的在前面
+        const sortedCartItems = [...formattedItems].reverse();
+        setCartItems(sortedCartItems);
+        // 更新选中状态数组
+        setSelectedItems(new Array(sortedCartItems.length).fill(false));
+        setTotal(response.data.total);
+      } else {
+        message.error(response.message || '获取购物车数据失败');
+      }
+    } catch (error) {
+      message.error('获取购物车数据失败');
+    } finally {
+      setLoading(false);
     }
-  ];
+  }
 
   useEffect(() => {
-    // TODO: 从后端获取购物车数据
-    setCartItems(mockCartItems);
-  }, []);
+    fetchChartItems();
+  }, [current, pageSize]);//当current或pageSize改变时，重新获取购物车数据
 
-  const handleQuantityChange = (id, value) => {
-    setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.id === id ? { ...item, quantity: value } : item
-      )
-    );
+  const handleQuantityChange = async (id, value) => {
+    try {
+      const response = await cartService.updateCart({
+        cartId: id,
+        amount: value
+      });
+      if (response.code === 200) {
+        setCartItems(prevItems =>
+          prevItems.map(item =>
+            item.id === id ? { ...item, quantity: value } : item
+          )
+        );
+        message.success('购物车更新成功');
+      } else {
+        message.error(response.message || '更新购物车失败');
+      }
+    } catch (error) {
+      message.error('更新购物车失败，请稍后重试');
+    }
   };
 
   const handleDeleteItem = (id) => {
@@ -70,9 +112,18 @@ const CartPage = () => {
       content: '确定要将这个商品从购物车中删除吗？',
       okText: '确认',
       cancelText: '取消',
-      onOk() {
-        setCartItems(prevItems => prevItems.filter(item => item.id !== id));
-        message.success('商品已从购物车中删除');
+      async onOk() {
+        try {
+          const response = await cartService.deleteCart(id);
+          if (response.code === 200) {
+            await fetchChartItems(); // 重新获取购物车数据
+            message.success('商品已从购物车中删除');
+          } else {
+            message.error(response.message || '删除失败');
+          }
+        } catch (error) {
+          message.error('删除失败，请稍后重试');
+        }
       }
     });
   };
@@ -96,7 +147,7 @@ const CartPage = () => {
   const getTotalPrice = () => {
     return cartItems
       .filter(item => item.selected)
-      .reduce((total, item) => total + item.price * item.quantity, 0)
+      .reduce((total, item) => total + item.originalPrice * item.quantity, 0)
       .toFixed(2);
   };
 
@@ -104,13 +155,50 @@ const CartPage = () => {
     return cartItems.filter(item => item.selected).length;
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (getSelectedCount() === 0) {
       message.warning('请先选择要购买的商品');
       return;
     }
-    // TODO: 跳转到结算页面
-    navigate('/consumer/checkout');
+
+    try {
+      const userId = parseInt(localStorage.getItem('userId'), 10);
+      const leaderId = 1; // 默认团长ID
+      const address = "待传入"; // 默认地址，后续需要从用户输入获取
+
+      // 遍历所有选中的商品，创建订单
+      const selectedItems = cartItems.filter(item => item.selected);
+      for (const item of selectedItems) {
+        const orderData = {
+          userId: userId,
+          productId: item.productId,
+          orderStatus: 0,
+          amount: item.quantity,
+          address: address,
+          leaderId: leaderId,
+          isDeleted: 0
+        };
+
+        const response = await productOrderService.addOrder(orderData);
+        if (response.code !== 200) {
+          throw new Error(response.message || '创建订单失败');
+        }
+
+        // 删除购物车中的商品
+        const deleteResponse = await cartService.deleteCart(item.id);
+        if (deleteResponse.code !== 200) {
+          throw new Error(deleteResponse.message || '删除购物车失败');
+        }
+      }
+
+      // 刷新购物车列表
+      await fetchChartItems();
+      message.success('订单创建成功');
+      // 跳转到结算页面
+      navigate('/consumer/checkout');
+    } catch (error) {
+      message.error(error.message || '创建订单失败，请稍后重试');
+    }
   };
 
   return (
@@ -119,7 +207,7 @@ const CartPage = () => {
         <Title level={4}>
           <ShoppingCartOutlined /> 购物车
         </Title>
-        
+
         {cartItems.length > 0 ? (
           <>
             <List
@@ -129,44 +217,74 @@ const CartPage = () => {
               renderItem={item => (
                 <List.Item
                   className="cart-item"
-                  actions={[
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleDeleteItem(item.id)}
-                    >
-                      删除
-                    </Button>
-                  ]}
                 >
                   <div className="cart-item-content">
                     <Checkbox
                       checked={item.selected}
                       onChange={() => handleSelectItem(item.id)}
+                      disabled={item.isDeleted}
                     />
                     <div className="cart-item-image">
-                      <img src={"http://8.137.53.253:9000/commoshop/product/1894937370343108608.jpg"} alt={item.name} />
+                      <img src={item.image || "http://8.137.53.253:9000/commoshop/product/1894937370343108608.jpg"} alt={item.name} />
                     </div>
                     <div className="cart-item-details">
-                      <Text strong className="item-name">{item.name}</Text>
-                      <Text type="danger" className="item-price">
-                        ¥{item.price.toFixed(2)}
-                      </Text>
-                      <div className="quantity-control">
-                        <InputNumber
-                          min={1}
-                          max={item.stock}
-                          value={item.quantity}
-                          onChange={(value) => handleQuantityChange(item.id, value)}
-                        />
+                      <div className="item-top">
+                        <Text strong className="item-name">{item.name}</Text>
+                        <Text type="secondary" className="item-desc">{item.description}</Text>
+                      </div>
+                      <div className="item-bottom">
+                        <div className="price-quantity">
+                          <div className="price-info">
+                            <Text type="danger" className="item-price">
+                              ¥{(item.originalPrice || 0).toFixed(2)}
+                            </Text>
+                          </div>
+                          <div className="quantity-control">
+                            <Button
+                              type="text"
+                              size="small"
+                              className="quantity-btn minus"
+                              onClick={() => handleQuantityChange(item.id, (item.quantity || 1) - 1)}
+                              disabled={item.isDeleted || (item.quantity || 0) <= 1}
+                            >
+                              -
+                            </Button>
+                            <Input
+                              className="quantity-input"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value, 10);
+                                if (!isNaN(value)) {
+                                  handleQuantityChange(item.id, value);
+                                }
+                              }}
+                              disabled={item.isDeleted}
+                            />
+                            <Button
+                              type="text"
+                              size="small"
+                              className="quantity-btn plus"
+                              onClick={() => handleQuantityChange(item.id, (item.quantity || 1) + 1)}
+                              disabled={item.isDeleted || (item.quantity || 0) >= item.stock}
+                            >
+                              +
+                            </Button>
+                          </div>
+                        </div>
+                        {item.isDeleted && <Text type="danger" className="item-status">商品已下架</Text>}
                       </div>
                     </div>
+                    <Button
+                      type="text"
+                      className="delete-btn"
+                      icon={<CloseOutlined />}
+                      onClick={() => handleDeleteItem(item.id)}
+                    />
                   </div>
                 </List.Item>
               )}
             />
-            
+
             <div className="cart-footer">
               <div className="cart-footer-left">
                 <Checkbox

@@ -1,0 +1,32 @@
+.favorites-container {
+  padding: 8px;
+}
+
+.favorites-card {
+  box-shadow: none;
+  background: #f5f5f5;
+}
+
+.favorite-item {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.favorite-item .ant-image {
+  flex-shrink: 0;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 576px) {
+  .favorites-container {
+    padding: 0;
+  }
+  
+  .favorites-card {
+    border-radius: 0;
+  }
+  
+  .favorite-item {
+    margin-bottom: 4px !important;
+  }
+}
