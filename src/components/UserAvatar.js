@@ -86,7 +86,9 @@ const UserAvatar = () => {
           <Avatar
             style={{
               backgroundColor: '#1890ff',
-              marginRight: '8px'
+              marginRight: '8px',
+              width: '45px',
+              height: '45px'
             }}
             icon={<UserOutlined />}
           />

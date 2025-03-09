@@ -1,0 +1,170 @@
+.leader-home {
+  padding: 16px;
+}
+
+.welcome-header {
+  margin-bottom: 24px;
+}
+
+.welcome-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.welcome-header p {
+  margin: 4px 0 0;
+  color: #666;
+}
+
+.statistics-row {
+  margin-bottom: 24px;
+}
+
+.statistics-row .ant-card {
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.statistics-row .ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.statistics-row .ant-statistic-title {
+  color: #666;
+  font-size: 14px;
+}
+
+.statistics-row .ant-statistic-content {
+  color: #1890ff;
+  font-size: 24px;
+}
+
+.statistics-row .anticon {
+  font-size: 20px;
+  margin-right: 4px;
+}
+
+.orders-card {
+  margin-bottom: 24px;
+  border-radius: 8px;
+}
+
+.order-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-info {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.summary-row .ant-card {
+  border-radius: 8px;
+  height: 100%;
+}
+
+.team-status,
+.goods-status {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.ant-tag {
+  margin: 0;
+  padding: 2px 8px;
+}
+
+.leader-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: 64px;
+  background: #f0f2f5;
+}
+
+.bottom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #fff;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.bottom-tab-bar .ant-tabs {
+  margin-bottom: -4px;
+}
+
+.bottom-tab-bar .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.tab-item .anticon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  .leader-home {
+    padding: 12px;
+  }
+
+  .welcome-header h2 {
+    font-size: 18px;
+  }
+
+  .statistics-row .ant-statistic-content {
+    font-size: 20px;
+  }
+
+  .statistics-row .anticon {
+    font-size: 18px;
+  }
+
+  .summary-row {
+    margin-bottom: 16px;
+  }
+
+  .summary-row .ant-col {
+    margin-bottom: 16px;
+  }
+
+  .page-content {
+    padding: 12px;
+    padding-bottom: 60px;
+  }
+
+  .tab-item .anticon {
+    font-size: 18px;
+  }
+
+  .tab-item span {
+    font-size: 12px;
+  }
+}

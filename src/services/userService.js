@@ -112,5 +112,14 @@ export const userService = {
         } catch (error) {
             throw error;
         }
+    },
+    //更新用户密码
+    updatePassword: async (params) => {
+        try {
+            const response = await api.put(API_ENDPOINTS.USER.PASSWORD, null, { params });
+            return response;
+        } catch (error) {
+            throw error;
+        }
     }
 };

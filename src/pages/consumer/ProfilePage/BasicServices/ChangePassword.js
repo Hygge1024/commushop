@@ -10,7 +10,7 @@ const ChangePassword = () => {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      const { oldPassword, newPassword } = values;
+      const { oldPassword, newPassword, confirmPassword } = values;
       const username = localStorage.getItem('username');
 
       if (!username) {
@@ -18,13 +18,13 @@ const ChangePassword = () => {
         return;
       }
 
-      const response = await userService.changePassword({
-        username,
-        oldPassword,
-        newPassword
+      const response = await userService.updatePassword({
+        username: username,
+        oldPassword: oldPassword,
+        newPassword: newPassword
       });
 
-      if (response.success) {
+      if (response.code === 200) {
         message.success('密码修改成功，请重新登录');
         // 清除登录信息，跳转到登录页
         localStorage.removeItem('token');

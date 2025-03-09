@@ -9,6 +9,33 @@ import { fixedService } from '../../../services/fixed.js';
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
+const PaymentMethodContent = ({ method }) => {
+  if (method === 'wechat') {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px' }}>
+        <img 
+          src="http://8.137.53.253:9000/commoshop/product/wechat_qr.jpg" 
+          alt="微信支付二维码" 
+          style={{ width: '200px', height: '200px' }}
+        />
+        <p style={{ marginTop: '10px' }}>请使用微信扫描二维码支付</p>
+      </div>
+    );
+  } else if (method === 'alipay') {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px' }}>
+        <img 
+          src="http://8.137.53.253:9000/commoshop/product/alipay_qr.jpg" 
+          alt="支付宝支付二维码" 
+          style={{ width: '200px', height: '200px' }}
+        />
+        <p style={{ marginTop: '10px' }}>请使用支付宝扫描二维码支付</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,6 +46,7 @@ const Checkout = () => {
   const [privateAddresses, setPrivateAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('wechat');
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [receiverInfo, setReceiverInfo] = useState({
     name: '',
     phone: ''
@@ -121,29 +149,37 @@ const Checkout = () => {
       return;
     }
 
+    // 显示支付弹窗
+    setPaymentModalVisible(true);
+  };
+
+  const handlePaymentConfirm = async () => {
     try {
       setLoading(true);
       const addressString = `${receiverInfo.name}，${receiverInfo.phone}，${selectedAddress.address}`;
 
       // 对每个商品进行更新
       const updatePromises = selectedItems.map(item => {
+        // Handle both cases: direct porderId from PendingPayment and object from CartPage
+        const orderId = typeof item.id === 'object' ? item.id.porderId : item.id;
+        
         const orderData = {
-          porderId: item.id,
+          porderId: orderId,
           orderStatus: 2, // 更新为已支付状态
           address: addressString,
-          leaderId: parseInt(localStorage.getItem('userId'), 10)
+          leaderId: 1
         };
-        console.log("当前的商品信息为:"+JSON.stringify(orderData));
-        return productOrderService.updateOrder(orderData);
+        // console.log("当前的商品信息为:" + JSON.stringify(orderData));
+        return productOrderService.updateOrderStatus(orderData);
       });
 
       // 等待所有更新完成
       const results = await Promise.all(updatePromises);
-      console.log("当前的更新结果为:"+JSON.stringify(results));
       // 检查是否所有更新都成功
       const hasError = results.some(response => response.code !== 200);
-      
+
       if (!hasError) {
+        setPaymentModalVisible(false);
         message.success('支付成功');
         navigate('/consumer/orders');
       } else {
@@ -170,7 +206,7 @@ const Checkout = () => {
     >
       <Tabs defaultActiveKey="pickup">
         <TabPane tab="固定提货点" key="pickup">
-          <Radio.Group 
+          <Radio.Group
             onChange={(e) => handleAddressSelect(e.target.value, 'pickup')}
             value={selectedAddress?.type === 'pickup' ? selectedAddress : null}
           >
@@ -195,7 +231,7 @@ const Checkout = () => {
           </Radio.Group>
         </TabPane>
         <TabPane tab="私人地址" key="private">
-          <Radio.Group 
+          <Radio.Group
             onChange={(e) => handleAddressSelect(e.target.value, 'private')}
             value={selectedAddress?.type === 'private' ? selectedAddress : null}
           >
@@ -283,7 +319,7 @@ const Checkout = () => {
             <Radio.Group onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod}>
               <Space direction="vertical">
                 <Radio value="wechat">微信支付</Radio>
-                <Radio value="alipay">支付宝</Radio>
+                <Radio value="alipay">支付宝支付</Radio>
               </Space>
             </Radio.Group>
           </Card>
@@ -312,12 +348,34 @@ const Checkout = () => {
           {/* 提交订单 */}
           <div style={{ marginTop: '24px', textAlign: 'right' }}>
             <Space>
-              <Button onClick={() => navigate('/consumer/cart')}>返回购物车</Button>
-              <Button type="primary" loading={loading} onClick={handleSubmitOrder}>
+              <Text>
+                合计: <Text type="danger" strong>¥{getTotalPrice()}</Text>
+              </Text>
+              <Button type="primary" onClick={handleSubmitOrder} loading={loading}>
                 提交订单
               </Button>
             </Space>
           </div>
+
+          <Modal
+            title="请扫码支付"
+            visible={paymentModalVisible}
+            onCancel={() => setPaymentModalVisible(false)}
+            footer={[
+              <Button key="cancel" onClick={() => setPaymentModalVisible(false)}>
+                取消
+              </Button>,
+              <Button key="submit" type="primary" loading={loading} onClick={handlePaymentConfirm}>
+                我已支付
+              </Button>
+            ]}
+          >
+            <PaymentMethodContent method={paymentMethod} />
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <Text strong>支付金额：</Text>
+              <Text type="danger" strong>¥{getTotalPrice()}</Text>
+            </div>
+          </Modal>
         </Card>
       </Space>
     </div>

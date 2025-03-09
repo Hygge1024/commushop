@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
         DETAIL: `/api/details`,
         REGISTER: '/api/register',
         UPDATE: '/api/updateUserInfo',
+        PASSWORD:'/api/updatePassword'
     },
     ACTIVITY: {
         LIST: '/api/activity/page',
@@ -88,5 +89,11 @@ export const API_ENDPOINTS = {
     USERADDRESS:{
         ADD: (username) => `/api/${username}/addAddress`,
         DELETE: (addressId,username) => `/api/${username}/deleteAddress/${addressId}`,
+    },
+    //商品评价
+    EVALUATION: {
+        LIST: '/api/evaluation/page',
+        CREATE: '/api/evaluation/add',
+        DELETE: (evaluationId) => `/api/evaluation/${evaluationId}`
     }
 };

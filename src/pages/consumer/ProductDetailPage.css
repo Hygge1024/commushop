@@ -148,6 +148,88 @@
   padding: 48px 16px;
 }
 
+/* 评价区域样式 */
+.product-reviews-card {
+  margin-bottom: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.product-reviews-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+.product-reviews-card .ant-list-item {
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.3s;
+}
+
+.product-reviews-card .ant-list-item:hover {
+  background-color: #fafafa;
+}
+
+.product-reviews-card .ant-list-item-meta-title {
+  margin-bottom: 8px;
+}
+
+.product-reviews-card .ant-rate {
+  color: #faad14;
+}
+
+.product-reviews-card .ant-pagination {
+  margin-top: 16px;
+  padding: 0 24px;
+}
+
+/* 评价表单样式 */
+.ant-modal-review .ant-form-item {
+  margin-bottom: 24px;
+}
+
+.ant-modal-review .ant-rate {
+  font-size: 24px;
+}
+
+.ant-modal-review .ant-input-textarea {
+  border-radius: 4px;
+}
+
+.ant-modal-review .ant-form-item-label > label {
+  font-weight: 500;
+}
+
+.ant-modal-review .ant-btn {
+  height: 40px;
+  font-size: 16px;
+}
+
+/* 评分标签样式 */
+.review-score {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f6ffed;
+  color: #52c41a;
+  font-weight: 500;
+}
+
+.review-score .anticon {
+  margin-right: 4px;
+  color: #52c41a;
+}
+
+/* 空状态样式 */
+.ant-empty {
+  padding: 32px 0;
+}
+
+.ant-empty-description {
+  color: #8c8c8c;
+}
+
 @media (max-width: 576px) {
   .product-detail-container {
     padding: 12px;

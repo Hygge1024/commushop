@@ -1,0 +1,107 @@
+.leader-dashboard {
+  padding: 16px;
+}
+
+.welcome-header {
+  margin-bottom: 24px;
+}
+
+.welcome-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.welcome-header p {
+  margin: 4px 0 0;
+  color: #666;
+}
+
+.statistics-row {
+  margin-bottom: 24px;
+}
+
+.statistics-row .ant-card {
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.statistics-row .ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.statistics-row .ant-statistic-title {
+  color: #666;
+  font-size: 14px;
+}
+
+.statistics-row .ant-statistic-content {
+  color: #1890ff;
+  font-size: 24px;
+}
+
+.statistics-row .anticon {
+  font-size: 20px;
+  margin-right: 4px;
+}
+
+.orders-card {
+  margin-bottom: 24px;
+  border-radius: 8px;
+}
+
+.order-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-info {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.summary-row .ant-card {
+  border-radius: 8px;
+  height: 100%;
+}
+
+.team-status,
+.goods-status {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.ant-tag {
+  margin: 0;
+  padding: 2px 8px;
+}
+
+@media (max-width: 576px) {
+  .leader-dashboard {
+    padding: 12px;
+  }
+
+  .welcome-header h2 {
+    font-size: 18px;
+  }
+
+  .statistics-row .ant-statistic-content {
+    font-size: 20px;
+  }
+
+  .statistics-row .anticon {
+    font-size: 18px;
+  }
+
+  .summary-row {
+    margin-bottom: 16px;
+  }
+
+  .summary-row .ant-col {
+    margin-bottom: 16px;
+  }
+}

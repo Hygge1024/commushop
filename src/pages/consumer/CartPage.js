@@ -168,6 +168,8 @@ const CartPage = () => {
 
       // 遍历所有选中的商品，创建订单
       const selectedItems = cartItems.filter(item => item.selected);
+      const createdOrders = [];
+      
       for (const item of selectedItems) {
         const orderData = {
           userId: userId,
@@ -183,6 +185,12 @@ const CartPage = () => {
         if (response.code !== 200) {
           throw new Error(response.message || '创建订单失败');
         }
+        
+        // 保存创建的订单信息
+        createdOrders.push({
+          orderId: response.data,  // 使用API返回的订单ID
+          item: item
+        });
 
         // 删除购物车中的商品
         const deleteResponse = await cartService.deleteCart(item.id);
@@ -194,8 +202,20 @@ const CartPage = () => {
       // 刷新购物车列表
       await fetchChartItems();
       message.success('订单创建成功');
-      // 跳转到结算页面
-      navigate('/consumer/checkout');
+      // 跳转到结算页面，并传递选中的商品信息
+      navigate('/consumer/checkout', {
+        state: {
+          selectedItems: createdOrders.map(order => ({
+            id: order.orderId,  // 使用新创建的订单ID
+            productId: order.item.productId,
+            name: order.item.name,
+            price: order.item.originalPrice,
+            quantity: order.item.quantity,
+            image: order.item.image,
+            totalMoney: order.item.originalPrice * order.item.quantity
+          }))
+        }
+      });
     } catch (error) {
       message.error(error.message || '创建订单失败，请稍后重试');
     }
