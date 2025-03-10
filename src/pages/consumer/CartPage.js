@@ -174,7 +174,7 @@ const CartPage = () => {
         const orderData = {
           userId: userId,
           productId: item.productId,
-          orderStatus: 0,
+          orderStatus: 1,
           amount: item.quantity,
           address: address,
           leaderId: leaderId,
