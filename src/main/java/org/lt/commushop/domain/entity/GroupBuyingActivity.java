@@ -42,8 +42,10 @@ public class GroupBuyingActivity implements Serializable {
     private Integer minGroupSize;
 
     private Integer maxGroupSize;
-    
+
     private Integer isDeleted;
+
+    private Integer peopleAcount;
 
 
 }

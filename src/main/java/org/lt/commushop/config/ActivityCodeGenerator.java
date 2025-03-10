@@ -23,11 +23,29 @@ public class ActivityCodeGenerator {
         // 获取当前时间（精确到秒）
         LocalDateTime now = LocalDateTime.now();
         String timeStr = now.format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
-        
+
         // 生成6位随机数（确保是6位）
         int randomNum = ThreadLocalRandom.current().nextInt(MIN_RANDOM, MAX_RANDOM + 1);
-        
+
         // 组合编码：ACT + 时间 + 随机数
         return String.format("ACT%s%06d", timeStr, randomNum);
+    }
+    /**
+     * 订单动编码
+     * 格式：ACT + 年月日时分秒 + 6位随机数
+     * 示例：ACT20250206215959123456
+     *
+     * @return 活动编码
+     */
+    public String generateOrderCode() {
+        // 获取当前时间（精确到秒）
+        LocalDateTime now = LocalDateTime.now();
+        String timeStr = now.format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
+
+        // 生成6位随机数（确保是6位）
+        int randomNum = ThreadLocalRandom.current().nextInt(MIN_RANDOM, MAX_RANDOM + 1);
+
+        // 组合编码：ACT + 时间 + 随机数
+        return String.format("ORD%s%06d", timeStr, randomNum);
     }
 }

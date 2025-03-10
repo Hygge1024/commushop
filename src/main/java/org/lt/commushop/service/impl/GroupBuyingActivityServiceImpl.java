@@ -258,6 +258,28 @@ public class GroupBuyingActivityServiceImpl extends ServiceImpl<GroupBuyingActiv
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public GroupBuyingActivity addPeopleAcount(Integer activityId) {
+        if(activityId == null){
+            throw new BusinessException("更新参与人次失败：更新信息不能为空");
+        }
+        //检查活动是否存在
+        GroupBuyingActivity existActivity = this.getById(activityId);
+        if(existActivity == null || existActivity.getIsDeleted() == 1){
+            throw new BusinessException("更新参与人次失败：活动不存在");
+        }
+        int peopleAcount = 0;
+        if(existActivity.getPeopleAcount() == null){
+            existActivity.setPeopleAcount(1);
+        }else{
+            peopleAcount = existActivity.getPeopleAcount() +1;
+            existActivity.setPeopleAcount(peopleAcount);
+        }
+        this.updateById(existActivity);
+        return existActivity;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateGroupBuyingActivity(UpdateGroupBuyingActivityDTO updateDTO) {
         if (updateDTO == null) {
             throw new BusinessException("更新团购活动失败：更新信息不能为空");

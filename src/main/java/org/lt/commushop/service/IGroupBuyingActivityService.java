@@ -63,4 +63,7 @@ public interface IGroupBuyingActivityService extends IService<GroupBuyingActivit
      * @return 删除是否成功
      */
     boolean removeActivityProduct(String activityCode, Integer productId);
+
+
+    GroupBuyingActivity addPeopleAcount(Integer activityId);
 }

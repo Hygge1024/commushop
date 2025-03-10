@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.models.auth.In;
 import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.Hander.ActivityWithProductsVO;
 import org.lt.commushop.domain.entity.GroupBuyingActivity;
@@ -93,5 +94,12 @@ public class GroupBuyingActivityController {
     public Result<ActivityStatisticsVO> getActivityStatistics() {
         ActivityStatisticsVO statistics = activityStatisticsService.getActivityStatistics();
         return Result.success(statistics);
+    }
+
+    @PutMapping("/peopleCount/{activityId}")
+    public Result<GroupBuyingActivity> UpdatePeopleAcount(
+            @ApiParam(value = "活动ID", required = true) @PathVariable Integer activityId
+            ){
+        return Result.success(groupBuyingActivityService.addPeopleAcount(activityId),"更新人数成功");
     }
 }
