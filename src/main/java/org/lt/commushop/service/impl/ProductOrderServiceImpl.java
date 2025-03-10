@@ -64,7 +64,7 @@ public class ProductOrderServiceImpl extends ServiceImpl<ProductOrderMapper, Pro
             throw new BusinessException("下单失败：团长不存在");
         }
         // 4.更改totalMoney
-        Double endPrice = product.getOriginalPrice().doubleValue() * productOrder.getAmount();
+        Double endPrice = product.getOriginalPrice().doubleValue() * productOrder.getAmount();//计算的是原价
         productOrder.setTotalMoney(endPrice);
         // 4.添加订单
         productOrderMapper.insert(productOrder);
