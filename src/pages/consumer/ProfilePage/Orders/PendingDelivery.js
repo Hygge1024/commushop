@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Card, List, Tag, Space, Button, Empty, message } from 'antd';
 import { ShoppingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { productOrderService } from '../../../../services/productOrderService';
-import { goodsService } from '../../../../services/goodsService';
+import { orderNewService } from '../../../../services/orderNewService';
+import OrderDetailModal from '../../../../components/OrderDetailModal';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
 // 订单状态定义
 const ORDER_STATUS = {
-  PAID: 2,        // 已支付（未发货）
+  PAID: 2,        // 已支付（待发货）
 };
 
 // 状态标签配置
@@ -22,14 +22,15 @@ const PendingDelivery = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
-  const [ordersWithProducts, setOrdersWithProducts] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
 
   // 获取订单列表
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const userId = parseInt(localStorage.getItem('userId'), 10);
-      const response = await productOrderService.getOrderList({
+      const response = await orderNewService.getOrderList({
         current: 1,
         size: 50,
         userId: userId
@@ -42,32 +43,6 @@ const PendingDelivery = () => {
           order.isDeleted === 0 && order.orderStatus === ORDER_STATUS.PAID
         );
         setOrders(validOrders);
-        
-        // 获取订单对应的商品信息
-        const ordersWithProductDetails = await Promise.all(
-          validOrders.map(async (order) => {
-            try {
-              const productResponse = await goodsService.getGoodsDetail(order.productId);
-              return {
-                ...order,
-                product: productResponse.data || {
-                  productName: '商品信息获取失败',
-                  imageUrl: ''
-                }
-              };
-            } catch (error) {
-              console.error('获取商品详情失败:', error);
-              return {
-                ...order,
-                product: {
-                  productName: '商品信息获取失败',
-                  imageUrl: ''
-                }
-              };
-            }
-          })
-        );
-        setOrdersWithProducts(ordersWithProductDetails);
       }
     } catch (error) {
       console.error('获取订单列表失败:', error);
@@ -81,16 +56,22 @@ const PendingDelivery = () => {
     fetchOrders();
   }, []);
 
+  const handleOrderClick = (order) => {
+    setSelectedOrder(order);
+    setDetailModalVisible(true);
+  };
+
   // 渲染订单列表项
   const renderOrderItem = (order) => (
     <List.Item>
       <Card 
-        style={{ width: '100%' }}
-        bodyStyle={{ padding: '12px' }}
+        style={{ width: '100%', cursor: 'pointer' }}
+        styles={{ body: { padding: '12px' } }}
+        onClick={() => handleOrderClick(order)}
       >
         <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
-            <Text type="secondary">订单号: {order.porderId}</Text>
+            <Text type="secondary">订单号: {order.orderCode}</Text>
             <Text type="secondary">{dayjs(order.createTime).format('YYYY-MM-DD HH:mm:ss')}</Text>
           </Space>
           <Tag color={STATUS_CONFIG[order.orderStatus]?.color || 'default'}>
@@ -99,16 +80,9 @@ const PendingDelivery = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-          <img 
-            src={order.product.imageUrl || 'https://via.placeholder.com/100'} 
-            alt={order.product.productName}
-            style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-          />
           <div style={{ flex: 1 }}>
-            <Text strong style={{ fontSize: '14px' }}>{order.product.productName}</Text>
             <div style={{ marginTop: '8px' }}>
-              <Text type="secondary">数量: {order.amount}</Text>
-              <Text type="danger" style={{ marginLeft: '12px' }}>
+              <Text type="danger" style={{ fontSize: '16px' }}>
                 总价: ¥{order.totalMoney.toFixed(2)}
               </Text>
             </div>
@@ -143,14 +117,19 @@ const PendingDelivery = () => {
       
       <List
         loading={loading}
-        dataSource={ordersWithProducts}
+        dataSource={orders}
         renderItem={renderOrderItem}
         locale={{
           emptyText: <Empty description="暂无待发货订单" />
         }}
-        style={{
-          background: '#f5f5f5',
-          padding: '8px'
+      />
+
+      <OrderDetailModal
+        visible={detailModalVisible}
+        orderCode={selectedOrder?.orderCode}
+        onClose={() => {
+          setDetailModalVisible(false);
+          setSelectedOrder(null);
         }}
       />
     </div>

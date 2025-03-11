@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import './CartPage.css';
 import { cartService } from '../../services/cartService';
 import { productOrderService } from '../../services/productOrderService';
+import { orderNewService } from '../../services/orderNewService'; // 新增服务
 
 const { Text, Title } = Typography;
 const { confirm } = Modal;
@@ -147,7 +148,7 @@ const CartPage = () => {
   const getTotalPrice = () => {
     return cartItems
       .filter(item => item.selected)
-      .reduce((total, item) => total + item.originalPrice * item.quantity, 0)
+      .reduce((total, item) => total + item.price * item.quantity, 0)
       .toFixed(2);
   };
 
@@ -163,57 +164,58 @@ const CartPage = () => {
 
     try {
       const userId = parseInt(localStorage.getItem('userId'), 10);
-      const leaderId = 1; // 默认团长ID
-      const address = "待传入"; // 默认地址，后续需要从用户输入获取
-
-      // 遍历所有选中的商品，创建订单
       const selectedItems = cartItems.filter(item => item.selected);
-      const createdOrders = [];
       
+      // 计算总金额
+      const totalMoney = selectedItems.reduce((total, item) => 
+        total + (item.price * item.quantity), 0);
+
+      // 1. 创建订单
+      const orderResponse = await orderNewService.addOrder({
+        userId: userId,
+        totalMoney: totalMoney
+      });
+      const { orderId, orderCode } = orderResponse.data;  // 从返回的订单对象中获取orderId和orderCode
+
+
+      if (orderResponse.code !== 200) {
+        throw new Error(orderResponse.message || '创建订单失败');
+      }
+
+      // 2. 添加订单商品记录
+      const orderProducts = selectedItems.map(item => ({
+        orderCode: orderCode,
+        productId: item.productId,
+        userId: userId,
+        amount: item.quantity
+      }));
+
+      const productsResponse = await orderNewService.addOrderList(orderProducts);
+      
+      if (productsResponse.code !== 200) {
+        throw new Error(productsResponse.message || '添加订单商品失败');
+      }
+
+      // 3. 删除购物车中的商品
       for (const item of selectedItems) {
-        const orderData = {
-          userId: userId,
-          productId: item.productId,
-          orderStatus: 1,
-          amount: item.quantity,
-          address: address,
-          leaderId: leaderId,
-          isDeleted: 0
-        };
-
-        const response = await productOrderService.addOrder(orderData);
-        if (response.code !== 200) {
-          throw new Error(response.message || '创建订单失败');
-        }
-        
-        // 保存创建的订单信息
-        createdOrders.push({
-          orderId: response.data,  // 使用API返回的订单ID
-          item: item
-        });
-
-        // 删除购物车中的商品
         const deleteResponse = await cartService.deleteCart(item.id);
         if (deleteResponse.code !== 200) {
-          throw new Error(deleteResponse.message || '删除购物车失败');
+          console.error('删除购物车商品失败:', item.id);
         }
       }
 
-      // 刷新购物车列表
+      // 4. 刷新购物车列表
       await fetchChartItems();
       message.success('订单创建成功');
-      // 跳转到结算页面，并传递选中的商品信息
+
+      // 5. 跳转到结算页面
       navigate('/consumer/checkout', {
         state: {
-          selectedItems: createdOrders.map(order => ({
-            id: order.orderId,  // 使用新创建的订单ID
-            productId: order.item.productId,
-            name: order.item.name,
-            price: order.item.originalPrice,
-            quantity: order.item.quantity,
-            image: order.item.image,
-            totalMoney: order.item.originalPrice * order.item.quantity
-          }))
+          selectedItems: [{
+            id: orderId,
+            orderCode: orderCode,
+            totalMoney: totalMoney
+          }]
         }
       });
     } catch (error) {
@@ -255,9 +257,14 @@ const CartPage = () => {
                       <div className="item-bottom">
                         <div className="price-quantity">
                           <div className="price-info">
-                            <Text type="danger" className="item-price">
-                              ¥{(item.originalPrice || 0).toFixed(2)}
-                            </Text>
+                          <Space direction="vertical" size={2}>
+                              <Text type="secondary" delete style={{ fontSize: '12px' }}>
+                                原价: ¥{(item.originalPrice || 0).toFixed(2)}
+                              </Text>
+                              <Text type="danger" className="item-price" strong>
+                                优惠价: ¥{(item.price || 0).toFixed(2)}
+                              </Text>
+                            </Space>
                           </div>
                           <div className="quantity-control">
                             <Button

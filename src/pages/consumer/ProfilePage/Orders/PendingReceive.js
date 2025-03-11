@@ -2,34 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Card, List, Tag, Space, Button, Empty, message, Modal } from 'antd';
 import { ShoppingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { productOrderService } from '../../../../services/productOrderService';
-import { goodsService } from '../../../../services/goodsService';
+import { orderNewService } from '../../../../services/orderNewService';
+import OrderDetailModal from '../../../../components/OrderDetailModal';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
 // 订单状态定义
 const ORDER_STATUS = {
-  SHIPPED: 3,        // 已发货
+  DELIVERED: 4,     // 已送达（待收货）
+  RECEIVED: 5,      // 已收货（完成）
 };
 
 // 状态标签配置
 const STATUS_CONFIG = {
-  [ORDER_STATUS.SHIPPED]: { color: 'processing', text: '已发货' },
+  [ORDER_STATUS.DELIVERED]: { color: 'success', text: '待收货' },
 };
 
 const PendingReceive = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
-  const [ordersWithProducts, setOrdersWithProducts] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
 
   // 获取订单列表
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const userId = parseInt(localStorage.getItem('userId'), 10);
-      const response = await productOrderService.getOrderList({
+      const response = await orderNewService.getOrderList({
         current: 1,
         size: 50,
         userId: userId
@@ -39,35 +41,9 @@ const PendingReceive = () => {
         console.log("获取订单列表成功");
         // 过滤出未删除的待收货订单
         const validOrders = response.data.records.filter(order => 
-          order.isDeleted === 0 && order.orderStatus === ORDER_STATUS.SHIPPED
+          order.isDeleted === 0 && order.orderStatus === ORDER_STATUS.DELIVERED
         );
         setOrders(validOrders);
-        
-        // 获取订单对应的商品信息
-        const ordersWithProductDetails = await Promise.all(
-          validOrders.map(async (order) => {
-            try {
-              const productResponse = await goodsService.getGoodsDetail(order.productId);
-              return {
-                ...order,
-                product: productResponse.data || {
-                  productName: '商品信息获取失败',
-                  imageUrl: ''
-                }
-              };
-            } catch (error) {
-              console.error('获取商品详情失败:', error);
-              return {
-                ...order,
-                product: {
-                  productName: '商品信息获取失败',
-                  imageUrl: ''
-                }
-              };
-            }
-          })
-        );
-        setOrdersWithProducts(ordersWithProductDetails);
       }
     } catch (error) {
       console.error('获取订单列表失败:', error);
@@ -81,6 +57,11 @@ const PendingReceive = () => {
     fetchOrders();
   }, []);
 
+  const handleOrderClick = (order) => {
+    setSelectedOrder(order);
+    setDetailModalVisible(true);
+  };
+
   // 确认收货
   const handleConfirmReceive = (order) => {
     Modal.confirm({
@@ -88,9 +69,9 @@ const PendingReceive = () => {
       content: '确认已收到商品吗？确认后订单将完成。',
       onOk: async () => {
         try {
-          const response = await productOrderService.updateOrderStatus({
-            porderId: order.porderId,
-            orderStatus: 5 // 已完成
+          const response = await orderNewService.updateOrderStatus({
+            orderId: order.orderId,
+            orderStatus: ORDER_STATUS.RECEIVED // 已完成
           });
           
           if (response.code === 200) {
@@ -111,12 +92,13 @@ const PendingReceive = () => {
   const renderOrderItem = (order) => (
     <List.Item>
       <Card 
-        style={{ width: '100%' }}
-        bodyStyle={{ padding: '12px' }}
+        style={{ width: '100%', cursor: 'pointer' }}
+        styles={{ body: { padding: '12px' } }}
+        onClick={() => handleOrderClick(order)}
       >
         <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
-            <Text type="secondary">订单号: {order.porderId}</Text>
+            <Text type="secondary">订单号: {order.orderCode}</Text>
             <Text type="secondary">{dayjs(order.createTime).format('YYYY-MM-DD HH:mm:ss')}</Text>
           </Space>
           <Tag color={STATUS_CONFIG[order.orderStatus]?.color || 'default'}>
@@ -125,16 +107,9 @@ const PendingReceive = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-          <img 
-            src={order.product.imageUrl || 'https://via.placeholder.com/100'} 
-            alt={order.product.productName}
-            style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-          />
           <div style={{ flex: 1 }}>
-            <Text strong style={{ fontSize: '14px' }}>{order.product.productName}</Text>
             <div style={{ marginTop: '8px' }}>
-              <Text type="secondary">数量: {order.amount}</Text>
-              <Text type="danger" style={{ marginLeft: '12px' }}>
+              <Text type="danger" style={{ fontSize: '16px' }}>
                 总价: ¥{order.totalMoney.toFixed(2)}
               </Text>
             </div>
@@ -173,14 +148,19 @@ const PendingReceive = () => {
       
       <List
         loading={loading}
-        dataSource={ordersWithProducts}
+        dataSource={orders}
         renderItem={renderOrderItem}
         locale={{
           emptyText: <Empty description="暂无待收货订单" />
         }}
-        style={{
-          background: '#f5f5f5',
-          padding: '8px'
+      />
+
+      <OrderDetailModal
+        visible={detailModalVisible}
+        orderCode={selectedOrder?.orderCode}
+        onClose={() => {
+          setDetailModalVisible(false);
+          setSelectedOrder(null);
         }}
       />
     </div>

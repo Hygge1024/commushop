@@ -40,7 +40,7 @@ export const API_ENDPOINTS = {
         DETAIL: `/api/details`,
         REGISTER: '/api/register',
         UPDATE: '/api/updateUserInfo',
-        PASSWORD:'/api/updatePassword'
+        PASSWORD: '/api/updatePassword'
     },
     ACTIVITY: {
         LIST: '/api/activity/page',
@@ -57,6 +57,16 @@ export const API_ENDPOINTS = {
         DELETE: '/api/group-buying-order/order/delete',
         // 订单统计
         ORDER_STATISTICS: `${API_BASE_URL}/api/group-buying-order/statistics`,
+    },
+    ORDERNEW: {
+        "LIST": "api/order/page",
+        "CREATE": "api/order/create",
+        "UPDATE": "api/order/update",
+        "DELETE": (orderId) => `/api/order/delete/${orderId}`,
+
+        //查看商品详情部分
+        "LISTDETAIL": "api/order/pagedetail",
+        "ADDLIST": "api/order/batch"
     },
     // 支付管理
     PAYMENT: {
@@ -86,9 +96,9 @@ export const API_ENDPOINTS = {
         DELETE: (collectionId) => `/api/collection/cancel/${collectionId}`,
         CHECK: "/api/collection/check"
     },
-    USERADDRESS:{
+    USERADDRESS: {
         ADD: (username) => `/api/${username}/addAddress`,
-        DELETE: (addressId,username) => `/api/${username}/deleteAddress/${addressId}`,
+        DELETE: (addressId, username) => `/api/${username}/deleteAddress/${addressId}`,
     },
     //商品评价
     EVALUATION: {
