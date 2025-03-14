@@ -165,9 +165,9 @@ const CartPage = () => {
     try {
       const userId = parseInt(localStorage.getItem('userId'), 10);
       const selectedItems = cartItems.filter(item => item.selected);
-      
+
       // 计算总金额
-      const totalMoney = selectedItems.reduce((total, item) => 
+      const totalMoney = selectedItems.reduce((total, item) =>
         total + (item.price * item.quantity), 0);
 
       // 1. 创建订单
@@ -191,7 +191,7 @@ const CartPage = () => {
       }));
 
       const productsResponse = await orderNewService.addOrderList(orderProducts);
-      
+
       if (productsResponse.code !== 200) {
         throw new Error(productsResponse.message || '添加订单商品失败');
       }
@@ -257,7 +257,7 @@ const CartPage = () => {
                       <div className="item-bottom">
                         <div className="price-quantity">
                           <div className="price-info">
-                          <Space direction="vertical" size={2}>
+                            <Space direction="vertical" size={2}>
                               <Text type="secondary" delete style={{ fontSize: '12px' }}>
                                 原价: ¥{(item.originalPrice || 0).toFixed(2)}
                               </Text>

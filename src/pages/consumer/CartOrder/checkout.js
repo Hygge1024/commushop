@@ -8,14 +8,17 @@ import { fixedService } from '../../../services/fixed.js';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
+// 添加新的状态
+// const [leaders, setLeaders] = useState([]);
+// const [selectedLeader, setSelectedLeader] = useState(null);
 
 const PaymentMethodContent = ({ method }) => {
   if (method === 'wechat') {
     return (
       <div style={{ textAlign: 'center', padding: '20px' }}>
-        <img 
-          src="http://8.137.53.253:9000/commoshop/product/wechat_qr.jpg" 
-          alt="微信支付二维码" 
+        <img
+          src="http://8.137.53.253:9000/commoshop/product/wechat_qr.jpg"
+          alt="微信支付二维码"
           style={{ width: '200px', height: '200px' }}
         />
         <p style={{ marginTop: '10px' }}>请使用微信扫描二维码支付</p>
@@ -24,9 +27,9 @@ const PaymentMethodContent = ({ method }) => {
   } else if (method === 'alipay') {
     return (
       <div style={{ textAlign: 'center', padding: '20px' }}>
-        <img 
-          src="http://8.137.53.253:9000/commoshop/product/alipay_qr.jpg" 
-          alt="支付宝支付二维码" 
+        <img
+          src="http://8.137.53.253:9000/commoshop/product/alipay_qr.jpg"
+          alt="支付宝支付二维码"
           style={{ width: '200px', height: '200px' }}
         />
         <p style={{ marginTop: '10px' }}>请使用支付宝扫描二维码支付</p>
@@ -40,6 +43,8 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [form] = Form.useForm();
+  const [leaders, setLeaders] = useState([]);
+  const [selectedLeader, setSelectedLeader] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -65,8 +70,22 @@ const Checkout = () => {
     fetchUserAddresses();
     fetchFixedPickupPoints();
     fetchUserInfo();
+    fetchLeaders(); // 添加这行
   }, [location.state]);
-
+  // 添加获取团长列表的函数
+  const fetchLeaders = async () => {
+    try {
+      const response = await userService.getUserDetails(); // 获取所有用户
+      if (response.code === 200) {
+        // 筛选角色ID为3的用户作为团长
+        const leadersList = response.data.filter(user => user.role.roleId === 3);
+        setLeaders(leadersList);
+      }
+    } catch (error) {
+      console.error('获取团长列表失败:', error);
+      message.error('获取团长列表失败');
+    }
+  };
   const fetchOrderDetails = async (orderCode) => {
     try {
       const response = await orderNewService.getOrderListDetail({
@@ -148,7 +167,7 @@ const Checkout = () => {
 
   const handleAddressSelect = (id, type) => {
     // 根据类型和ID找到完整的地址对象
-    const address = type === 'pickup' 
+    const address = type === 'pickup'
       ? fixedPickupPoints.find(point => point.id === id)
       : privateAddresses.find(addr => addr.id === id);
 
@@ -181,6 +200,11 @@ const Checkout = () => {
       return;
     }
 
+    if (!selectedLeader) {
+      message.warning('请选择配送团长');
+      return;
+    }
+
     // 显示支付弹窗
     setPaymentModalVisible(true);
   };
@@ -198,10 +222,10 @@ const Checkout = () => {
         orderId: order.id, // 订单ID
         orderStatus: 2, // 已支付状态
         address: addressString,
-        leaderId: 1,
+        leaderId: selectedLeader, // 添加团长ID
         totalMoney: parseFloat(order.totalMoney || 0)
       };
-      
+
       const response = await orderNewService.updateOrderStatus(orderData);
 
       if (response.code === 200) {
@@ -288,6 +312,25 @@ const Checkout = () => {
             value={receiverInfo.phone}
             onChange={(e) => handleReceiverInfoChange('phone', e.target.value)}
           />
+          {/* 添加团长选择 */}
+          <div style={{ marginTop: '16px' }}>
+            <Title level={5}>配送团长</Title>
+            <Radio.Group
+              onChange={(e) => setSelectedLeader(e.target.value)}
+              value={selectedLeader}
+            >
+              <Space direction="vertical">
+                {leaders.map(leader => (
+                  <Radio key={leader.user.userId} value={leader.user.userId}>
+                    <Space>
+                      <Text>{leader.user.fullname}</Text>
+                      <Text type="secondary">{leader.user.phoneNumber}</Text>
+                    </Space>
+                  </Radio>
+                ))}
+              </Space>
+            </Radio.Group>
+          </div>
         </Space>
       </div>
     </Card>
@@ -351,9 +394,9 @@ const Checkout = () => {
         </Title>
 
         {renderOrderDetails()}
-        
+
         {renderAddressSelection()}
-        
+
         <Card
           type="inner"
           title={
@@ -373,8 +416,8 @@ const Checkout = () => {
         </Card>
 
         <div style={{ textAlign: 'right', marginTop: '24px' }}>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             size="large"
             loading={loading}
             onClick={handleSubmitOrder}

@@ -9,7 +9,6 @@ import {
   Progress, 
   Tag, 
   Statistic, 
-  Image,
   message,
   Spin,
   Empty,
@@ -17,13 +16,13 @@ import {
 } from 'antd';
 import { 
   ThunderboltOutlined, 
-  ClockCircleOutlined, 
-  TeamOutlined,
+  ClockCircleOutlined,
   ShoppingCartOutlined,
   FireOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { activityService } from '../../services/activityService';
+import { cartService } from '../../services/cartService';
 import dayjs from 'dayjs';
 import './FlashSalePage.css';
 
@@ -63,9 +62,10 @@ const FlashSalePage = () => {
     fetchData();
   }, [fetchData]);
 
-  const getActivityStatus = (activity) => {
-    if (!activity) return { color: 'default', text: '未知' };
+  const getActivityStatus = (activityData) => {
+    if (!activityData || !activityData.activity) return { color: 'default', text: '未知' };
     
+    const activity = activityData.activity;
     const now = dayjs();
     const startTime = dayjs(activity.activityStartTime);
     const endTime = dayjs(activity.activityEndTime);
@@ -109,9 +109,34 @@ const FlashSalePage = () => {
     return Math.round((sold / total) * 100);
   };
 
-  const handleJoinGroup = (productId) => {
-    message.success('已加入拼团');
-    // TODO: 实现加入拼团逻辑
+  const handleProductClick = (product) => {
+    navigate(`/consumer/product/${product.productId}`);
+  };
+
+  const handleAddToCart = async (productId, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    try {
+      const userId = parseInt(localStorage.getItem('userId'), 10);
+      if (!userId) {
+        message.error('请先登录');
+        return;
+      }
+      const response = await cartService.addCart({
+        userId: userId,
+        productId: productId,
+        amount: 1
+      });
+      if (response.code === 200) {
+        message.success('商品添加成功');
+      } else {
+        message.error(response.message || '商品添加失败');
+      }
+    } catch (error) {
+      console.error('添加购物车失败:', error);
+      message.error(error.message || '添加购物车失败');
+    }
   };
 
   const getDefaultImage = (productName) => {
@@ -158,8 +183,8 @@ const FlashSalePage = () => {
 
   // 对活动进行排序：进行中 > 即将开始 > 已结束
   const sortedActivities = [...activities].sort((a, b) => {
-    const statusA = getActivityStatus(a.activity);
-    const statusB = getActivityStatus(b.activity);
+    const statusA = getActivityStatus(a);
+    const statusB = getActivityStatus(b);
     
     const priority = { active: 0, upcoming: 1, ended: 2 };
     return priority[statusA.type] - priority[statusB.type];
@@ -168,9 +193,8 @@ const FlashSalePage = () => {
   return (
     <div className="flash-sale-container">
       {sortedActivities.map((activityData, index) => {
+        const activityStatus = getActivityStatus(activityData);
         const activity = activityData.activity;
-        const products = activityData.products;
-        const activityStatus = getActivityStatus(activity);
 
         return (
           <React.Fragment key={activity.activityId}>
@@ -179,7 +203,7 @@ const FlashSalePage = () => {
               <div className="activity-header">
                 <div className="activity-title">
                   <ThunderboltOutlined className="flash-icon" />
-                  <Title level={4}>{activity.activityName}（没接接口）</Title>
+                  <Title level={4}>{activity.activityName}</Title>
                 </div>
                 <div className="activity-countdown">
                   <ClockCircleOutlined />
@@ -195,11 +219,7 @@ const FlashSalePage = () => {
 
               <div className="activity-status">
                 <FireOutlined style={{ color: '#ff4d4f' }} />
-                <Text>
-                  {activityStatus.text}
-                  {activity.minGroupSize && activity.maxGroupSize && 
-                    ` · ${activity.minGroupSize}-${activity.maxGroupSize}人成团`}
-                </Text>
+                <Text>{activityStatus.text}</Text>
                 <Tag color={activityStatus.color}>
                   {activityStatus.type === 'upcoming' ? '即将开始' :
                    activityStatus.type === 'active' ? '抢购中' : '已结束'}
@@ -207,74 +227,110 @@ const FlashSalePage = () => {
               </div>
 
               <div className="products-grid">
-                <Row gutter={[16, 16]}>
-                  {products?.map((product) => (
+                <Row gutter={[8, 16]}>
+                  {activityData.products?.map((product) => (
                     <Col xs={12} sm={8} md={6} key={product.productId}>
                       <Badge.Ribbon
                         text={`省¥${(product.originalPrice - product.groupPrice).toFixed(2)}`}
-                        color="red"
+                        color="#ff4d4f"
                       >
                         <Card
+                          hoverable
+                          bodyStyle={{ padding: '8px' }}
                           className="product-card"
+                          onClick={() => handleProductClick(product)}
                           cover={
-                            <Image
-                              alt={product.productName}
-                              src={product.imageUrl || getDefaultImage(product.productName)}
-                              fallback={getDefaultImage(product.productName)}
-                              preview={false}
-                            />
-                          }
-                          bodyStyle={{ padding: '12px', flex: 1 }}
-                        >
-                          <div className="product-info">
-                            <Title level={5} className="product-name" ellipsis={{ rows: 2 }}>
-                              {product.productName}
-                            </Title>
-                            
-                            <div className="price-info">
-                              <Text type="danger" className="group-price">
-                                ¥{product.groupPrice.toFixed(2)}
-                              </Text>
-                              <Text type="secondary" className="original-price">
-                                ¥{product.originalPrice.toFixed(2)}
-                              </Text>
-                              <Tag color="red" className="discount-tag">
-                                {calculateDiscount(product.originalPrice, product.groupPrice)}% OFF
-                              </Tag>
-                            </div>
-
-                            <div className="stock-info">
-                              <Progress
-                                percent={getSoldProgress(product.totalStock || 100, product.stockQuantity)}
-                                size="small"
-                                showInfo={false}
-                                strokeColor={{
-                                  '0%': '#108ee9',
-                                  '100%': '#87d068',
+                            <div style={{ position: 'relative', paddingTop: '100%' }}>
+                              <img
+                                alt={product.productName}
+                                src={product.imageUrl}
+                                style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover'
+                                }}
+                                onError={(e) => {
+                                  e.target.src = getDefaultImage(product.productName);
                                 }}
                               />
-                              <div className="stock-text">
-                                <Text type="secondary">
+                            </div>
+                          }
+                        >
+                          <div style={{ minHeight: '88px' }}>
+                            <div style={{ 
+                              fontSize: '14px',
+                              fontWeight: '500',
+                              marginBottom: '4px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: '2',
+                              WebkitBoxOrient: 'vertical',
+                              lineHeight: '1.2'
+                            }}>
+                              {product.productName}
+                            </div>
+                            
+                            <div style={{ 
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              marginTop: '8px'
+                            }}>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ 
+                                  color: '#ff4d4f',
+                                  fontSize: '16px',
+                                  fontWeight: 'bold',
+                                  lineHeight: '1'
+                                }}>
+                                  ¥{product.groupPrice.toFixed(2)}
+                                </div>
+                                <div style={{ 
+                                  fontSize: '12px',
+                                  color: '#999',
+                                  textDecoration: 'line-through',
+                                  marginTop: '2px'
+                                }}>
+                                  ¥{product.originalPrice.toFixed(2)}
+                                </div>
+                                <Progress
+                                  percent={getSoldProgress(product.totalStock || 100, product.stockQuantity)}
+                                  size="small"
+                                  showInfo={false}
+                                  strokeColor={{
+                                    '0%': '#ff4d4f',
+                                    '100%': '#ff7875',
+                                  }}
+                                  style={{ marginTop: '4px' }}
+                                />
+                                <Text type="secondary" style={{ fontSize: '12px' }}>
                                   剩余: {product.stockQuantity}
                                 </Text>
-                                <Text type="secondary">
-                                  <TeamOutlined /> {activity.minGroupSize}人团
-                                </Text>
                               </div>
+                              <Button
+                                type="primary"
+                                size="middle"
+                                icon={<ShoppingCartOutlined style={{ fontSize: '18px' }} />}
+                                onClick={(e) => handleAddToCart(product.productId, e)}
+                                disabled={activityStatus.type === 'ended' || product.stockQuantity <= 0}
+                                style={{
+                                  borderRadius: '20px',
+                                  padding: '0 16px',
+                                  height: '40px',
+                                  width: '40px',
+                                  minWidth: '40px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  background: '#ff4d4f',
+                                  borderColor: '#ff4d4f'
+                                }}
+                              />
                             </div>
-
-                            <Button
-                              type="primary"
-                              icon={<ShoppingCartOutlined />}
-                              block
-                              onClick={() => handleJoinGroup(product.productId)}
-                              disabled={activityStatus.type === 'ended' || product.stockQuantity <= 0}
-                            >
-                              {activityStatus.type === 'upcoming' ? '提醒我' :
-                               product.stockQuantity <= 0 ? '已抢光' :
-                               activityStatus.type === 'ended' ? '已结束' :
-                               '立即抢购'}
-                            </Button>
                           </div>
                         </Card>
                       </Badge.Ribbon>

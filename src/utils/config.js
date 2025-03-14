@@ -40,7 +40,8 @@ export const API_ENDPOINTS = {
         DETAIL: `/api/details`,
         REGISTER: '/api/register',
         UPDATE: '/api/updateUserInfo',
-        PASSWORD: '/api/updatePassword'
+        PASSWORD: '/api/updatePassword',
+        USERDETAILs: '/api/userDetails',
     },
     ACTIVITY: {
         LIST: '/api/activity/page',

@@ -54,6 +54,15 @@ export const userService = {
             throw error;
         }
     },
+    //获取用户详细信息
+    getUserDetails: async () => {
+        try {
+            const response = await api.get(`${API_ENDPOINTS.USER.USERDETAILs}`);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
 
     //获取用户详细信息（地址加身份信息）
     getUserDetail: async (username) => {
