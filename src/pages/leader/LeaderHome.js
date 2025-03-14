@@ -8,12 +8,15 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import './LeaderHome.css';
+import OrderDetails from './order/orderDetails';
+import UserDetailPage from '../consumer/ProfilePage/My/UserDetailPage';
 
 // 使用懒加载导入组件
 const LeaderDashboard = lazy(() => import('./LeaderDashboard'));
 const LeaderDelivery = lazy(() => import('./LeaderDelivery'));
 const LeaderService = lazy(() => import('./LeaderService'));
 const LeaderProfile = lazy(() => import('./LeaderProfile'));
+
 
 
 const { Content, Footer } = Layout;
@@ -71,15 +74,20 @@ const LeaderHome = () => {
             {/* 主页路由 */}
             <Route path="/leader/home" element={<LeaderDashboard />} />
             <Route path="/leader_home" element={<Navigate to="/leader/home" replace />} />
-            
+            <Route path="/leader/order/:orderId" element={<OrderDetails />} />
+            <Route path="/consumer/my/detail" element={<UserDetailPage />} />
+
             {/* 配送中心路由 */}
             <Route path="/leader/delivery" element={<LeaderDelivery />} />
-        
+
             {/* 服务中心路由 */}
             <Route path="/leader/service" element={<LeaderService />} />
-           
+
             {/* 个人中心路由 */}
             <Route path="/leader/profile" element={<LeaderProfile />} />
+
+
+
 
             <Route path="/leader/" element={<Navigate to="home" replace />} />
           </Routes>
@@ -99,7 +107,7 @@ const LeaderHome = () => {
       <Footer style={{ textAlign: 'center', display: screens.xs ? 'none' : 'block' }}>
         社区商城 - 团长中心 {new Date().getFullYear()}
       </Footer>
-    </Layout>
+    </Layout >
   );
 };
 

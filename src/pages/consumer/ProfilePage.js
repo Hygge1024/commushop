@@ -44,9 +44,9 @@ const ProfilePage = () => {
     <div className="profile-container">
       <div className="user-info">
         <div className="user-header">
-          <Avatar 
-            size={64} 
-            icon={<UserOutlined />} 
+          <Avatar
+            size={64}
+            icon={<UserOutlined />}
             className="user-avatar"
           />
           <div className="user-details">
@@ -54,8 +54,8 @@ const ProfilePage = () => {
             <p>ID: {userInfo?.username}</p>
           </div>
         </div>
-        <div 
-          className="profile-edit" 
+        <div
+          className="profile-edit"
           onClick={() => navigate('/consumer/my/detail')}
         >
           <RightOutlined style={{ color: 'white' }} />
@@ -91,7 +91,7 @@ const ProfilePage = () => {
 
       <div className="service-section">
         <div className="section-header">
-          <h3>基础服务(还没接接口)</h3>
+          <h3>基础服务</h3>
         </div>
         <div className="service-types">
           <div className="service-type" onClick={() => navigate('/consumer/basic-services/favorites')}>
