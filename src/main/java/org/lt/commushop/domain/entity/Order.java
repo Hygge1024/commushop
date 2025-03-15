@@ -22,7 +22,7 @@ public class Order implements Serializable {
     private Integer orderId;
     private String orderCode;
     private Integer userId;
-    private double totalMoney;
+    private Double totalMoney;
     private Integer orderStatus;
     private String address;
     private Integer leaderId;

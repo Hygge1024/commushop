@@ -37,8 +37,9 @@ public class OrderProductsController {
             @ApiParam(value = "每页数量", defaultValue = "10") @RequestParam(defaultValue = "10") Integer size,
             @ApiParam(value = "用户ID") @RequestParam(required = false) Integer userId,
             @ApiParam(value = "订单状态") @RequestParam(required = false) Integer orderStatus,
-            @ApiParam(value = "团长ID") @RequestParam(required = false) Integer leaderId) {
-        return Result.success(orderService.getOrderPage(current, size, userId, orderStatus, leaderId));
+            @ApiParam(value = "团长ID") @RequestParam(required = false) Integer leaderId,
+            @ApiParam(value = "订单ID") @RequestParam(required = false) Integer orderId) {
+        return Result.success(orderService.getOrderPage(current, size, userId, orderStatus, leaderId,orderId));
     }
 
     @ApiOperation(value = "更新订单")

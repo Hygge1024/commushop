@@ -25,7 +25,7 @@ public interface IOrderService extends IService<Order> {
      * @return 订单分页数据
      */
     IPage<Order> getOrderPage(Integer current, Integer size, Integer userId,
-                              Integer orderStatus, Integer leaderId);
+                              Integer orderStatus, Integer leaderId,Integer orderId);
 
     // 更新订单（地址、团长、特别是订单状态）
     /**

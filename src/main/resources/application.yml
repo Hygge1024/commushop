@@ -18,6 +18,11 @@ spring:
       location: ./temp/upload #文件上传的临时路径
       max-file-size: 10MB #文件上传的最大大小
       max-request-size: 10MB #请求的最大大小
+  redis:
+    host: 8.137.53.253
+    port: 6379
+    password: redis_FcaJWr
+    timeout: 5000
 
 server:
   port: 8081 #服务端口
@@ -36,3 +41,7 @@ jwt:
   expiration: 86400000  # 24 hours in milliseconds
   tokenPrefix: "Bearer "
   headerKey: "Authorization"
+deepseek:
+  api:
+    url: https://api.deepseek.com/chat/completions
+    key: sk-56085f2f63e14c949d20afc8846551b3

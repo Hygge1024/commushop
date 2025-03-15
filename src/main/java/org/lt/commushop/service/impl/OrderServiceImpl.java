@@ -77,7 +77,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public IPage<Order> getOrderPage(Integer current, Integer size, Integer userId, Integer orderStatus, Integer leaderId) {
+    public IPage<Order> getOrderPage(Integer current, Integer size, Integer userId, Integer orderStatus, Integer leaderId,Integer orderId) {
 
         // 1.创建分页对象
         Page<Order> page = new Page<>(current, size);
@@ -94,6 +94,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         if (leaderId != null) {
             queryWrapper.eq(Order::getLeaderId, leaderId);
+        }
+        if(orderId != null){
+            queryWrapper.eq(Order::getOrderId,orderId);
         }
         //3.过滤掉被软删除的
         queryWrapper.ne(Order::getIsDeleted, 1);
@@ -123,6 +126,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (order.getOrderStatus() != null) existOrder.setOrderStatus(order.getOrderStatus());
         if (order.getAddress() != null) existOrder.setAddress(order.getAddress());
         if (order.getLeaderId() != null) existOrder.setLeaderId(order.getLeaderId());
+        if( order.getTotalMoney() != null) existOrder.setTotalMoney(order.getTotalMoney());
 
 
         return orderMapper.updateById(existOrder) > 0;
