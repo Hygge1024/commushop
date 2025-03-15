@@ -106,5 +106,10 @@ export const API_ENDPOINTS = {
         LIST: '/api/evaluation/page',
         CREATE: '/api/evaluation/add',
         DELETE: (evaluationId) => `/api/evaluation/${evaluationId}`
+    },
+    CHAT: {
+        SEND: '/api/chat',
+        LIST: (username) => `/api/chat/history/${username}`,
+        SENDREASON: '/api/chat/reasoner/stream',
     }
 };
