@@ -23,13 +23,10 @@ spring:
     port: 6379
     password: redis_FcaJWr
     timeout: 5000
-
 server:
   port: 8081 #服务端口
   servlet:
      context-path: /api #接口路径
-
-
 minio:
   endpoint: http://8.137.53.253:9000 #minio的地址
   accessKey: BE83o8xLiyLLiq70dDzl #minio的访问密钥
@@ -45,3 +42,12 @@ deepseek:
   api:
     url: https://api.deepseek.com/chat/completions
     key: sk-56085f2f63e14c949d20afc8846551b3
+coze:
+  api:
+    url: https://api.coze.cn/open_api/v2/chat
+    key: pat_RMD84xdLyyniJKBiyHTz7JOM45GwPJL8UwpXcFbw294bC2f62zqE2wSBIO8oQ6SP
+  bot:
+    id: 7485968377924747318
+chat:
+  service:
+    type: coze

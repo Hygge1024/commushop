@@ -3,6 +3,7 @@ package org.lt.commushop.service.UtilsService;
 import lombok.extern.slf4j.Slf4j;
 import org.lt.commushop.common.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -18,7 +19,11 @@ public class ChatService {
     private DeepSeekService deepSeekService;
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private CozeService cozeService;
 
+    @Value("${chat.service.type:deepseek}")
+    private String chatServiceType;
     /**
      * 获取用户的对话历史
      */
@@ -37,20 +42,17 @@ public class ChatService {
         // 获取用户上下文
         List<Map<String, String>> context = redisService.getUserContext(username);
 
-        // 格式化打印上下文内容
-        // System.out.println("当前对话上下文：");
-        // if (context != null) {
-        // for (Map<String, String> message : context) {
-        // System.out.println("角色: " + message.get("role"));
-        // System.out.println("内容: " + message.get("content"));
-        // System.out.println("-------------------");
-        // }
-        // }
         if (context == null) {
             context = new ArrayList<>();
         }
         // 调用DeepSeek API 生成回复
-        String aiResponse = deepSeekService.getAiResponse(userMessage, context);
+        String aiResponse = null;
+        if ("coze".equalsIgnoreCase(chatServiceType)) {
+            aiResponse = cozeService.getAiResponse(userMessage, username);
+        } else {
+            aiResponse = deepSeekService.getAiResponse(userMessage, context);
+        }
+        // String aiResponse = deepSeekService.getAiResponse(userMessage, context);
 
         if (aiResponse != null) {
             // 保存用户消息
@@ -73,6 +75,9 @@ public class ChatService {
         }
     }
 
+    /**
+     * 处理流式消息(暂时没调用)
+     */
     public void handleReasonerMessageStream(String username, String message, SseEmitter emitter) {
         try {
             // 获取历史上下文

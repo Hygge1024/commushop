@@ -107,7 +107,7 @@ public class DeepSeekService {
     }
 
     /**
-     * 调用DeepSeek Reasoner API生成带推理过程的回复
+     * 调用DeepSeek Reasoner API生成带推理过程的回复(暂时还没调用)
      */
     public void getReasonerResponseStream(String userMessage, List<Map<String, String>> context, SseEmitter emitter) {
         // 构建消息列表
