@@ -19,6 +19,7 @@ import lombok.experimental.Accessors;
  * @author tao
  * @since 2025-01-21
  */
+//已弃用
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)

@@ -1,5 +1,5 @@
 package org.lt.commushop.controller;
-
+//已弃用
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

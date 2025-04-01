@@ -2,6 +2,8 @@ package org.lt.commushop.service.UtilsService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.lt.commushop.common.Result;
+import org.lt.commushop.domain.entity.User;
+import org.lt.commushop.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 @Slf4j
 @Service
 public class ChatService {
@@ -21,9 +24,16 @@ public class ChatService {
     private RedisService redisService;
     @Autowired
     private CozeService cozeService;
+    @Autowired
+    private IntentClassifierService intentClassifierService;
+    @Autowired
+    private QueryExecutorService queryExecutorService;
+    @Autowired
+    private IUserService userService;
 
     @Value("${chat.service.type:deepseek}")
     private String chatServiceType;
+
     /**
      * 获取用户的对话历史
      */
@@ -45,22 +55,48 @@ public class ChatService {
         if (context == null) {
             context = new ArrayList<>();
         }
-        // 调用DeepSeek API 生成回复
-        String aiResponse = null;
-        if ("coze".equalsIgnoreCase(chatServiceType)) {
-            aiResponse = cozeService.getAiResponse(userMessage, username);
-        } else {
-            aiResponse = deepSeekService.getAiResponse(userMessage, context);
+        
+        // 保存用户消息到上下文
+        Map<String, String> userMsg = new HashMap<>();
+        userMsg.put("role", "user");
+        userMsg.put("content", userMessage);
+        context.add(userMsg);
+        
+        // 通过username获取userId
+        Integer userId = null;
+        try {
+            User user = userService.getUserName(username);
+            if (user != null) {
+                userId = user.getUserId();
+                log.info("获取到用户ID: {}, 用户名: {}", userId, username);
+            }
+        } catch (Exception e) {
+            log.warn("获取用户ID失败: {}", e.getMessage());
+            // 继续处理，userId为null时将无法执行特定用户的数据库查询
         }
-        // String aiResponse = deepSeekService.getAiResponse(userMessage, context);
+        
+        // 首先进行意图识别
+        Map<String, Object> intentResult = intentClassifierService.classifyIntent(userMessage);
+        String intentType = (String) intentResult.get("intentType");
+        Map<String, String> params = (Map<String, String>) intentResult.get("params");
+        
+        // 如果是特定查询意图，执行数据库查询
+        String aiResponse = null;
+        if (!"general_query".equals(intentType)) {
+            aiResponse = queryExecutorService.executeQuery(intentType, params, userId);
+        }
+        
+        // 如果数据库查询无法处理或返回null，则调用AI模型
+        if (aiResponse == null) {
+            // 调用大模型 API 生成回复
+            if ("coze".equalsIgnoreCase(chatServiceType)) {
+                aiResponse = cozeService.getAiResponse(userMessage, username);
+            } else {
+                aiResponse = deepSeekService.getAiResponse(userMessage, context);
+            }
+        }
 
         if (aiResponse != null) {
-            // 保存用户消息
-            Map<String, String> userMsg = new HashMap<>();
-            userMsg.put("role", "user");
-            userMsg.put("content", userMessage);
-            context.add(userMsg);
-
             // 保存AI回复
             Map<String, String> assistantMsg = new HashMap<>();
             assistantMsg.put("role", "assistant");
@@ -71,6 +107,8 @@ public class ChatService {
             redisService.saveUserContext(username, context);
             return Result.success("对话成功", aiResponse);
         } else {
+            // 移除之前添加的用户消息
+            context.remove(context.size() - 1);
             return Result.error("对话失败");
         }
     }
@@ -111,5 +149,4 @@ public class ChatService {
             }
         }
     }
-
 }

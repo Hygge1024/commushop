@@ -64,6 +64,20 @@ public class OrderProductsServiceImpl extends ServiceImpl<OrderProductsMapper, O
             if (orderProduct.getAmount() <= 0) {
                 throw new BusinessException("批量添加订单商品失败：商品数量必须大于0");
             }
+            
+            // 检查库存是否充足
+            if (existproduct.getStockQuantity() < orderProduct.getAmount()) {
+                throw new BusinessException("批量添加订单商品失败：商品库存不足，商品ID=" + orderProduct.getProductId() 
+                        + "，当前库存=" + existproduct.getStockQuantity() 
+                        + "，需要数量=" + orderProduct.getAmount());
+            }
+            
+            // 预先减少库存（后面如果保存失败会回滚）
+            existproduct.setStockQuantity(existproduct.getStockQuantity() - orderProduct.getAmount());
+            int updateResult = productMapper.updateById(existproduct);
+            if (updateResult <= 0) {
+                throw new BusinessException("批量添加订单商品失败：更新商品库存失败，商品ID=" + orderProduct.getProductId());
+            }
         }
         // 3.批量保存订单商品
         boolean saveResult = this.saveBatch(orderProducts);

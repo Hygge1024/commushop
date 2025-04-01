@@ -1,3 +1,4 @@
+//已弃用
 package org.lt.commushop.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
