@@ -26,7 +26,7 @@ public interface IPaymentService extends IService<PaymentRecord> {
      * @param paymentMethod 支付方式
      * @return 支付记录ID
      */
-    Integer createPayment(Integer orderId, String paymentMethod);
+    Integer createPayment(Integer orderId,String paymentMethod);
 
     /**
      * 分页查询支付记录（只查询已支付的记录）

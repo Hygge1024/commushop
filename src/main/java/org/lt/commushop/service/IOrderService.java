@@ -38,4 +38,32 @@ public interface IOrderService extends IService<Order> {
 
     // 软删除订单
     Boolean softDeleteOrder(Integer orderId);
+
+    /**
+     * 申请退款
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean applyRefund(Integer orderId);
+
+    /**
+     * 同意退款
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean approveRefund(Integer orderId);
+
+    /**
+     * 拒绝退款
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean rejectRefund(Integer orderId);
+
+    /**
+     * 完成退款
+     * @param orderId 订单ID
+     * @return 是否成功
+     */
+    Boolean completeRefund(Integer orderId);
 }

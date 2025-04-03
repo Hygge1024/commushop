@@ -38,7 +38,7 @@ public class PaymentController {
             @ApiParam(value = "订单ID", required = true) @RequestParam Integer orderId,
             @ApiParam(value = "支付方式", required = true) @RequestParam String paymentMethod) {
 
-        Integer paymentId = paymentService.createPayment(orderId, paymentMethod);
+        Integer paymentId = paymentService.createPayment(orderId,paymentMethod);
         return Result.success(paymentId, "创建支付记录成功");
     }
     @ApiOperation(value = "支付记录分页查询", notes = "查询指定用户的已支付记录，支持订单ID、金额范围、时间范围等多条件筛选")
@@ -74,7 +74,7 @@ public class PaymentController {
 
         IPage<PaymentQueryVO> page = paymentService.getPaymentdetailsPage(
                 current, size, paymentId, orderId, activityName, paymentMethod, startTime, endTime);
-        
+
         return Result.success(page);
     }
     @GetMapping("/statistics")

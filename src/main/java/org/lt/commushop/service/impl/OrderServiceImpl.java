@@ -150,4 +150,86 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         existOrder.setIsDeleted(1);
         return orderMapper.updateById(existOrder) > 0;
     }
+
+    @Override
+    public Boolean applyRefund(Integer orderId) {
+        // 1. 检查订单是否存在
+        Order existOrder = orderMapper.selectById(orderId);
+        if (existOrder == null) {
+            throw new BusinessException("申请退款失败：订单不存在");
+        }
+
+        // 2. 检查订单状态
+        Integer status = existOrder.getOrderStatus();
+        if (status != 5) {
+            throw new BusinessException("申请退款失败：只有确认收货后的订单才能申请退款");
+        }
+        if (status == 6) {
+            throw new BusinessException("申请退款失败：订单已在退款申请中");
+        }
+        if (status == 7 || status == 9) {
+            throw new BusinessException("申请退款失败：订单已经在退款流程中或已退款");
+        }
+
+        // 3. 更新订单状态为退款申请中
+        existOrder.setOrderStatus(6);
+        return orderMapper.updateById(existOrder) > 0;
+    }
+
+    @Override
+    public Boolean approveRefund(Integer orderId) {
+        // 1. 检查订单是否存在
+        Order existOrder = orderMapper.selectById(orderId);
+        if (existOrder == null) {
+            throw new BusinessException("同意退款失败：订单不存在");
+        }
+
+        // 2. 检查订单状态
+        Integer status = existOrder.getOrderStatus();
+        if (status != 6) {
+            throw new BusinessException("同意退款失败：只能处理退款申请中的订单");
+        }
+
+        // 3. 更新订单状态为同意退款
+        existOrder.setOrderStatus(7);
+        return orderMapper.updateById(existOrder) > 0;
+    }
+
+    @Override
+    public Boolean rejectRefund(Integer orderId) {
+        // 1. 检查订单是否存在
+        Order existOrder = orderMapper.selectById(orderId);
+        if (existOrder == null) {
+            throw new BusinessException("拒绝退款失败：订单不存在");
+        }
+
+        // 2. 检查订单状态
+        Integer status = existOrder.getOrderStatus();
+        if (status != 6) {
+            throw new BusinessException("拒绝退款失败：只能处理退款申请中的订单");
+        }
+
+        // 3. 更新订单状态为拒绝退款
+        existOrder.setOrderStatus(8);
+        return orderMapper.updateById(existOrder) > 0;
+    }
+
+    @Override
+    public Boolean completeRefund(Integer orderId) {
+        // 1. 检查订单是否存在
+        Order existOrder = orderMapper.selectById(orderId);
+        if (existOrder == null) {
+            throw new BusinessException("完成退款失败：订单不存在");
+        }
+
+        // 2. 检查订单状态
+        Integer status = existOrder.getOrderStatus();
+        if (status != 7) {
+            throw new BusinessException("完成退款失败：只能处理已同意退款的订单");
+        }
+
+        // 3. 更新订单状态为退款完成
+        existOrder.setOrderStatus(9);
+        return orderMapper.updateById(existOrder) > 0;
+    }
 }

@@ -71,4 +71,32 @@ public class OrderProductsController {
             @ApiParam(value = "用户ID") @RequestParam(required = false) Integer userId) {
         return Result.success(orderProductsService.getOrderProductsPage(current, size, orderCode, userId));
     }
+
+    @ApiOperation(value = "申请退款")
+    @PostMapping("/refund/apply/{orderId}")
+    public Result<Boolean> applyRefund(
+            @ApiParam(value = "订单ID", required = true) @PathVariable Integer orderId) {
+        return Result.success(orderService.applyRefund(orderId));
+    }
+
+    @ApiOperation(value = "同意退款")
+    @PostMapping("/refund/approve/{orderId}")
+    public Result<Boolean> approveRefund(
+            @ApiParam(value = "订单ID", required = true) @PathVariable Integer orderId) {
+        return Result.success(orderService.approveRefund(orderId));
+    }
+
+    @ApiOperation(value = "拒绝退款")
+    @PostMapping("/refund/reject/{orderId}")
+    public Result<Boolean> rejectRefund(
+            @ApiParam(value = "订单ID", required = true) @PathVariable Integer orderId) {
+        return Result.success(orderService.rejectRefund(orderId));
+    }
+
+    @ApiOperation(value = "确认退款完成")
+    @PostMapping("/refund/complete/{orderId}")
+    public Result<Boolean> completeRefund(
+            @ApiParam(value = "订单ID", required = true) @PathVariable Integer orderId) {
+        return Result.success(orderService.completeRefund(orderId));
+    }
 }
