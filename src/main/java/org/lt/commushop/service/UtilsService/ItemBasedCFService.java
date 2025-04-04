@@ -321,35 +321,6 @@ log.info("矩阵中的商品ID列表：{}", productIds);
     }
 
     /**
-     * 打印商品相似度矩阵（用于调试）
-     */
-    public void printSimilarityMatrix() {
-        log.info("开始打印商品相似度矩阵...");
-        Map<Integer, Map<Integer, Double>> matrix = getSimilarityMatrix();
-        Set<Integer> productIds = matrix.keySet();
-
-        // 打印表头
-        System.out.print("商品ID\t");
-        productIds.forEach(id -> System.out.print("P" + id + "\t"));
-        System.out.println();
-
-        // 打印矩阵内容
-        for (Integer product1 : productIds) {
-            System.out.print("P" + product1 + "\t");
-            for (Integer product2 : productIds) {
-                if (product1.equals(product2)) {
-                    System.out.print("1.00\t");
-                } else {
-                    double similarity = matrix.get(product1).getOrDefault(product2, 0.0);
-                    System.out.printf("%.2f\t", similarity);
-                }
-            }
-            System.out.println();
-        }
-        log.info("商品相似度矩阵打印完成");
-    }
-
-    /**
      * 开始推荐
      */
 
@@ -499,7 +470,7 @@ log.info("矩阵中的商品ID列表：{}", productIds);
                 }
                 //累加推荐分数
                 score += similarity * behaviorWeight;//商品 candidateItem 的推荐分数 score = 其与 userItem 的相似度 × 用户的交互权重
-                log.debug("商品ID = {} 与用户交互商品ID = {} 的相似度为{}, 行为权重为{}, 累加分数为{}", 
+                log.debug("商品ID = {} 与用户交互商品ID = {} 的相似度为{}, 行为权重为{}, 累加分数为{}",
                     candidateItem, userItem, similarity, behaviorWeight, score);
             }
             if(score > 0){
