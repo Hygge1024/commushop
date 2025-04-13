@@ -71,6 +71,16 @@ public class OrderProductsController {
             @ApiParam(value = "用户ID") @RequestParam(required = false) Integer userId) {
         return Result.success(orderProductsService.getOrderProductsPage(current, size, orderCode, userId));
     }
+    
+    @ApiOperation(value = "根据订单ID分页查询订单商品")
+    @GetMapping("/pagedetail/byOrderId")
+    public Result<IPage<OrderProductVO>> getOrderProductsByOrderId(
+            @ApiParam(value = "当前页码", defaultValue = "1") @RequestParam(defaultValue = "1") Integer current,
+            @ApiParam(value = "每页数量", defaultValue = "10") @RequestParam(defaultValue = "100") Integer size,
+            @ApiParam(value = "订单ID") @RequestParam(required = false) Integer orderId,
+            @ApiParam(value = "用户ID") @RequestParam(required = false) Integer userId) {
+        return Result.success(orderProductsService.getOrderProductsByOrderId(current, size, orderId, userId));
+    }
 
     @ApiOperation(value = "申请退款")
     @PostMapping("/refund/apply/{orderId}")

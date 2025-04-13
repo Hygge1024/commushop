@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrderService {
@@ -66,7 +67,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         // 4.设置订单信息
         order.setOrderCode(orderCode);
-        order.setCreateTime(LocalDateTime.now());
+        order.setCreateTime(LocalDateTime.now(ZoneId.of("Asia/Shanghai")));
         order.setOrderStatus(1); // 1表示未支付
         order.setIsDeleted(0);
 

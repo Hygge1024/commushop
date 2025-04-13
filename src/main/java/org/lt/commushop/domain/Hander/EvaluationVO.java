@@ -44,5 +44,5 @@ public class EvaluationVO {
     private Integer evaluationScore;
 
     @ApiModelProperty("评价时间")
-    private LocalDateTime createTime;
+    private LocalDateTime evaluationTime;
 }

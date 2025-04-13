@@ -143,7 +143,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
         }
 
         // 2.4 按评价时间倒序排序
-        queryWrapper.orderByDesc(Evaluation::getEvaluationId);
+        queryWrapper.orderByDesc(Evaluation::getEvaluationTime);
 
         // 3. 执行查询
         IPage<Evaluation> evaluationPage = this.page(page, queryWrapper);

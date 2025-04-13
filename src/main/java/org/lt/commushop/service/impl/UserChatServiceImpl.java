@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -42,7 +43,7 @@ public class UserChatServiceImpl extends ServiceImpl<ChatMessageMapper, ChatMess
         message.setReceiverId(receiverId);
         message.setMsgContent(content);
         message.setMsgType(1); // 1表示文本消息
-        message.setSendTime(LocalDateTime.now());
+        message.setSendTime(LocalDateTime.now(ZoneId.of("Asia/Shanghai")));
         message.setMsgStatus(0); // 0表示未读
         chatMessageMapper.insert(message);
 
@@ -81,7 +82,7 @@ public class UserChatServiceImpl extends ServiceImpl<ChatMessageMapper, ChatMess
                 chatList.set(i, swappedChat);
             }
         }
-        
+
         return chatList;
     }
 
@@ -120,7 +121,7 @@ public class UserChatServiceImpl extends ServiceImpl<ChatMessageMapper, ChatMess
         wrapper.eq(ChatMessage::getChatId, chatId)
                 .eq(ChatMessage::getReceiverId, userId)
                 .eq(ChatMessage::getMsgStatus, 0);
-        
+
         ChatMessage updateMsg = new ChatMessage();
         updateMsg.setMsgStatus(1); // 1表示已读
         return update(updateMsg, wrapper);

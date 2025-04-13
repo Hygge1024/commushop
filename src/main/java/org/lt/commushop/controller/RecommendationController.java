@@ -4,7 +4,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.Hander.RecommendItem;
+import org.lt.commushop.domain.entity.Product;
 import org.lt.commushop.domain.vo.RecommendedProduct;
+import org.lt.commushop.service.IProductService;
 import org.lt.commushop.service.UtilsService.ContentBasedService;
 import org.lt.commushop.service.UtilsService.HybridRecommendationService;
 import org.lt.commushop.service.UtilsService.ItemBasedCFService;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Api(tags = "商品推荐系统接口")
 @RestController
@@ -27,6 +30,8 @@ public class RecommendationController {
     private ContentBasedService contentBasedService;
     @Autowired
     private HybridRecommendationService hybridRecommendationService;
+    @Autowired
+    private IProductService productService;
 
     // 基于协同过滤的接口
     @ApiOperation("强制重新计算协同过滤相似度矩阵")
@@ -42,11 +47,28 @@ public class RecommendationController {
 
     @ApiOperation(value = "获取基于协同过滤的个性化商品推荐", notes = "基于用户的购买历史、收藏记录和评分数据")
     @GetMapping("/cf/products/{userId}")
-    public Result<List<RecommendItem>> getCFRecommendations(
+    public Result<List<RecommendedProduct>> getCFRecommendations(
             @PathVariable Integer userId,
             @RequestParam(defaultValue = "10") Integer topK) {
         try {
-            List<RecommendItem> recommendations = itemBasedCFService.recommendProducts(userId, topK);
+            List<RecommendItem> recommendItems = itemBasedCFService.recommendProducts(userId, topK);
+            
+            // 转换为RecommendedProduct类型，与hybrid接口保持一致
+            List<Integer> productIds = recommendItems.stream()
+                    .map(RecommendItem::getProductId)
+                    .collect(Collectors.toList());
+            
+            // 获取商品信息
+            Map<Integer, Product> productMap = productService.listByIds(productIds).stream()
+                    .collect(Collectors.toMap(Product::getProductId, p -> p));
+            
+            // 组装最终结果
+            List<RecommendedProduct> recommendations = recommendItems.stream()
+                    .map(item -> RecommendedProduct.fromProduct(
+                            productMap.get(item.getProductId()),
+                            item.getScore()))
+                    .collect(Collectors.toList());
+                    
             return Result.success(recommendations, "获取推荐商品成功");
         } catch (Exception e) {
             return Result.error("获取推荐商品失败：" + e.getMessage());
@@ -67,11 +89,28 @@ public class RecommendationController {
 
     @ApiOperation(value = "获取基于内容的个性化商品推荐", notes = "基于用户标签和商品特征")
     @GetMapping("/content/products/{userId}")
-    public Result<List<RecommendItem>> getContentBasedRecommendations(
+    public Result<List<RecommendedProduct>> getContentBasedRecommendations(
             @PathVariable Integer userId,
             @RequestParam(defaultValue = "10") Integer topK) {
         try {
-            List<RecommendItem> recommendations = contentBasedService.recommendProducts(userId, topK);
+            List<RecommendItem> recommendItems = contentBasedService.recommendProducts(userId, topK);
+            
+            // 转换为RecommendedProduct类型，与hybrid接口保持一致
+            List<Integer> productIds = recommendItems.stream()
+                    .map(RecommendItem::getProductId)
+                    .collect(Collectors.toList());
+            
+            // 获取商品信息
+            Map<Integer, Product> productMap = productService.listByIds(productIds).stream()
+                    .collect(Collectors.toMap(Product::getProductId, p -> p));
+            
+            // 组装最终结果
+            List<RecommendedProduct> recommendations = recommendItems.stream()
+                    .map(item -> RecommendedProduct.fromProduct(
+                            productMap.get(item.getProductId()),
+                            item.getScore()))
+                    .collect(Collectors.toList());
+                    
             return Result.success(recommendations, "获取推荐商品成功");
         } catch (Exception e) {
             return Result.error("获取推荐商品失败：" + e.getMessage());

@@ -189,4 +189,15 @@ public class UserController {
     public Result<UserStatisticsVO> getUserStatistics() {
         return Result.success(userService.getUserStatistics());
     }
+
+    @ApiOperation(value = "根据用户ID查询用户信息")
+    @GetMapping("/user/byUserId/{userId}")
+    public Result<User> getUserById(@ApiParam(value = "用户ID", required = true) @PathVariable Long userId) {
+        User user = userService.getById(userId);
+        if (user != null) {
+            return Result.success(user);
+        } else {
+            return Result.error("未找到该用户");
+        }
+    }
 }

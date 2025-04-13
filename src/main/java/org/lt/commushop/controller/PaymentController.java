@@ -46,7 +46,7 @@ public class PaymentController {
     public Result<IPage<PaymentRecord>> getPaymentPage(
             @ApiParam(value = "当前页码", required = true) @RequestParam Integer current,
             @ApiParam(value = "每页数量", required = true) @RequestParam Integer size,
-            @ApiParam(value = "用户ID", required = true) @RequestParam Integer userId,
+            @ApiParam(value = "用户ID") @RequestParam(required = false)  Integer userId,
             @ApiParam(value = "订单ID（可选，如果指定则必须是该用户的订单）") @RequestParam(required = false) Integer orderId,
             @ApiParam(value = "最小支付金额") @RequestParam(required = false) BigDecimal minAmount,
             @ApiParam(value = "最大支付金额") @RequestParam(required = false) BigDecimal maxAmount,

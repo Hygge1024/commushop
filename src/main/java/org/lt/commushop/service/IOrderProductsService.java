@@ -32,4 +32,16 @@ public interface IOrderProductsService extends IService<OrderProducts> {
     IPage<OrderProductVO> getOrderProductsPage(Integer current, Integer size, String orderCode,
                                                Integer userId);
 
+    /**
+     * 根据订单ID分页查询订单商品信息
+     *
+     * @param current 当前页
+     * @param size    每页大小
+     * @param orderId 订单ID
+     * @param userId  用户ID（可选）
+     * @return 分页结果
+     */
+    IPage<OrderProductVO> getOrderProductsByOrderId(Integer current, Integer size, Integer orderId,
+                                                  Integer userId);
+
 }

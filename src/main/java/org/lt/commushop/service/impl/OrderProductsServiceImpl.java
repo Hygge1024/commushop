@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.checkerframework.checker.units.qual.A;
+import org.lt.commushop.domain.entity.Order;
 import org.lt.commushop.domain.entity.OrderProducts;
 import org.lt.commushop.domain.entity.Product;
 import org.lt.commushop.domain.entity.User;
 import org.lt.commushop.domain.vo.OrderProductVO;
 import org.lt.commushop.exception.BusinessException;
+import org.lt.commushop.mapper.OrderMapper;
 import org.lt.commushop.mapper.OrderProductsMapper;
 import org.lt.commushop.mapper.ProductMapper;
 import org.lt.commushop.mapper.UserMapper;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +31,8 @@ public class OrderProductsServiceImpl extends ServiceImpl<OrderProductsMapper, O
     private ProductMapper productMapper;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private OrderMapper orderMapper;
 
     @Override
     public Double saveBatchOrderProducts(List<OrderProducts> orderProducts) {
@@ -64,14 +69,14 @@ public class OrderProductsServiceImpl extends ServiceImpl<OrderProductsMapper, O
             if (orderProduct.getAmount() <= 0) {
                 throw new BusinessException("批量添加订单商品失败：商品数量必须大于0");
             }
-            
+
             // 检查库存是否充足
             if (existproduct.getStockQuantity() < orderProduct.getAmount()) {
-                throw new BusinessException("批量添加订单商品失败：商品库存不足，商品ID=" + orderProduct.getProductId() 
-                        + "，当前库存=" + existproduct.getStockQuantity() 
+                throw new BusinessException("批量添加订单商品失败：商品库存不足，商品ID=" + orderProduct.getProductId()
+                        + "，当前库存=" + existproduct.getStockQuantity()
                         + "，需要数量=" + orderProduct.getAmount());
             }
-            
+
             // 预先减少库存（后面如果保存失败会回滚）
             existproduct.setStockQuantity(existproduct.getStockQuantity() - orderProduct.getAmount());
             int updateResult = productMapper.updateById(existproduct);
@@ -111,6 +116,60 @@ public class OrderProductsServiceImpl extends ServiceImpl<OrderProductsMapper, O
         // 4.执行查询
         IPage<OrderProducts> orderProductsPage = this.page(page, queryWrapper);
         // 5.转换为VO对象
+        IPage<OrderProductVO> voPage = new Page<>(current, size, orderProductsPage.getTotal());
+        List<OrderProductVO> voList = orderProductsPage.getRecords().stream().map(op -> {
+            OrderProductVO vo = new OrderProductVO();
+            vo.setOrderproductId(op.getOrderproductId());
+            vo.setOrderCode(op.getOrderCode());
+            vo.setUserId(op.getUserId());
+            vo.setAmount(op.getAmount());
+            // 获取商品详情
+            Product product = productMapper.selectById(op.getProductId());
+            vo.setProduct(product);
+            return vo;
+        }).collect(Collectors.toList());
+        voPage.setRecords(voList);
+        return voPage;
+    }
+
+    @Override
+    public IPage<OrderProductVO> getOrderProductsByOrderId(Integer current, Integer size, Integer orderId, Integer userId) {
+        // 1.参数校验
+        if (current == null || size == null) {
+            throw new BusinessException("查询订单商品失败：参数不能为空");
+        }
+        
+        // 2.根据orderId获取orderCode
+        String orderCode = null;
+        if (orderId != null) {
+            // 从Order表中查询订单信息
+            Order order = orderMapper.selectById(orderId);
+            if (order != null) {
+                orderCode = order.getOrderCode();
+            } else {
+                // 如果找不到订单，返回空结果
+                IPage<OrderProductVO> emptyPage = new Page<>(current, size, 0);
+                emptyPage.setRecords(new ArrayList<>());
+                return emptyPage;
+            }
+        }
+        
+        // 3.创建分页对象
+        Page<OrderProducts> page = new Page<>(current, size);
+
+        // 4.构建查询条件
+        LambdaQueryWrapper<OrderProducts> queryWrapper = new LambdaQueryWrapper<>();
+        if (orderCode != null) {
+            queryWrapper.eq(OrderProducts::getOrderCode, orderCode);
+        }
+        if (userId != null) {
+            queryWrapper.eq(OrderProducts::getUserId, userId);
+        }
+
+        queryWrapper.orderByAsc(OrderProducts::getOrderproductId);
+        // 5.执行查询
+        IPage<OrderProducts> orderProductsPage = this.page(page, queryWrapper);
+        // 6.转换为VO对象
         IPage<OrderProductVO> voPage = new Page<>(current, size, orderProductsPage.getTotal());
         List<OrderProductVO> voList = orderProductsPage.getRecords().stream().map(op -> {
             OrderProductVO vo = new OrderProductVO();
