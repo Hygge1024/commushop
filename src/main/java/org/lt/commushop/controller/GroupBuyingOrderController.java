@@ -11,6 +11,7 @@ import org.lt.commushop.domain.vo.OrderQueryVO;
 import org.lt.commushop.domain.vo.OrderStatisticsVO;
 import org.lt.commushop.dto.OrderQueryDTO;
 import org.lt.commushop.service.IGroupBuyingOrderService;
+import org.lt.commushop.service.UtilsService.IndexShowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,8 @@ public class GroupBuyingOrderController {
 
     @Autowired
     private IGroupBuyingOrderService orderService;
+    @Autowired
+    private IndexShowService indexShowService;
 
     @ApiOperation(value = "创建团购订单", notes = "用户参与团购活动创建订单")
     @PostMapping("/create")
@@ -119,7 +122,10 @@ public class GroupBuyingOrderController {
 
     @GetMapping("/statistics")
     @ApiOperation("获取订单统计信息")
+//    public Result<OrderStatisticsVO> getOrderStatistics() {
+//        return Result.success(orderService.getOrderStatistics());
+//    }
     public Result<OrderStatisticsVO> getOrderStatistics() {
-        return Result.success(orderService.getOrderStatistics());
+        return Result.success(indexShowService.getOrderStatistics());
     }
 }

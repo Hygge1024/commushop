@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.checkerframework.checker.units.qual.A;
 import org.lt.commushop.common.Result;
 import org.lt.commushop.domain.entity.PaymentRecord;
 import org.lt.commushop.domain.vo.PaymentQueryVO;
 import org.lt.commushop.domain.vo.PaymentStatisticsVO;
 import org.lt.commushop.service.IPaymentService;
+import org.lt.commushop.service.UtilsService.IndexShowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +33,8 @@ public class PaymentController {
 
     @Autowired
     private IPaymentService paymentService;
+    @Autowired
+    private IndexShowService indexShowService;
 
     @ApiOperation(value = "创建支付记录")
     @PostMapping("/create")
@@ -85,6 +89,7 @@ public class PaymentController {
             @ApiParam(value = "结束时间", example = "2024-01-05 23:59:59")
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
 
-        return Result.success(paymentService.getPaymentStatistics(startTime, endTime));
+//        return Result.success(paymentService.getPaymentStatistics(startTime, endTime));
+        return Result.success(indexShowService.getPaymentStatistics(startTime, endTime));
     }
 }
