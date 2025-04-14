@@ -1,0 +1,85 @@
+.chat-contact-list {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.chat-contact-item:hover {
+    background-color: #f5f5f5 !important;
+}
+
+.chat-contact-item {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.chat-contact-item:last-child {
+    border-bottom: none;
+}
+
+.chat-contact-item.selected {
+    background-color: #e6f7ff !important;
+    border-right: 3px solid #1890ff;
+}
+
+/* 自定义滚动条 */
+.chat-contact-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.chat-contact-list::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+}
+
+.chat-contact-list::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+/* 移动端样式 */
+@media (max-width: 768px) {
+    .chat-contact-item {
+        padding: 12px !important;
+    }
+    
+    .chat-contact-item .ant-list-item-meta-title {
+        font-size: 16px;
+        margin-bottom: 4px;
+    }
+    
+    .chat-contact-item .ant-list-item-meta-description {
+        font-size: 13px;
+        margin-top: 2px;
+        max-height: 40px;
+        overflow: hidden;
+    }
+    
+    .chat-contact-item .ant-avatar {
+        width: 42px;
+        height: 42px;
+        line-height: 42px;
+        font-size: 20px;
+    }
+    
+    .chat-contact-item.selected {
+        background-color: rgba(24, 144, 255, 0.1) !important;
+    }
+    
+    /* 时间标签 */
+    .chat-contact-time {
+        font-size: 12px;
+        color: #999;
+    }
+    
+    /* 未读消息标记 */
+    .unread-badge {
+        background-color: #ff4d4f;
+        color: white;
+        border-radius: 10px;
+        padding: 0 6px;
+        font-size: 12px;
+        min-width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+    }
+}

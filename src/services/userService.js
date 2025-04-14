@@ -130,5 +130,15 @@ export const userService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    // 通过ID获取用户信息
+    getUserById: async (userId) => {
+        try {
+            const response = await api.get(`${API_ENDPOINTS.USER.BY_ID}/${userId}`);
+            return response;
+        } catch (error) {
+            throw error;
+        }
     }
 };

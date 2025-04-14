@@ -1,85 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Table, Spin } from 'antd';
 import ReactECharts from 'echarts-for-react';
-import { dashboardService } from '../services/dashboardService';
+import { showService } from '../services/showService';
 
-// 模拟数据
-const mockData = {
-    overview: {
-        totalProducts: 373.5,
-        totalCategories: 368,
-        dailyComments: 8874,
-        growthRate: 2.8
-    },
-    visitData: [
-        { date: '2021-03-09', count: 10000 },
-        { date: '2021-03-10', count: 15000 },
-        { date: '2021-03-11', count: 39068 },
-        { date: '2021-03-12', count: 35000 },
-        { date: '2021-03-13', count: 30000 },
-        { date: '2021-03-14', count: 33000 },
-        { date: '2021-03-15', count: 38000 },
-        { date: '2021-03-16', count: 35000 }
-    ],
-    hotProducts: [
-        { rank: 1, title: 'iphone16', views: '346.3w+', growth: 35 },
-        { rank: 2, title: '华为Mate70Pro', views: '340.3w+', growth: 35 },
-        { rank: 3, title: '小米14Pro', views: '346.3w+', growth: 35 },
-        { rank: 4, title: '抽纸巾', views: '346.3w+', growth: 35 },
-        { rank: 5, title: '洗衣液', views: '346.3w+', growth: 35 }
-    ],
-    categoryStats: [
-        { type: '油炸类', value: 16 },
-        { type: '生鲜类', value: 48 },
-        { type: '水果鲜花', value: 36 }
-    ]
-};
+
 
 const Dashboard = () => {
     const [loading, setLoading] = useState(true);
-    const [overview, setOverview] = useState(mockData.overview);
-    const [visitData, setVisitData] = useState(mockData.visitData);
-    const [hotProducts, setHotProducts] = useState(mockData.hotProducts);
-    const [categoryStats, setCategoryStats] = useState(mockData.categoryStats);
+    const [overview, setOverview] = useState({
+        totalProducts: 0,
+        totalCategories: 0,
+        dailyComments: 0,
+        growthRate: 0
+    });
+    const [visitData, setVisitData] = useState([]);
+    const [hotProducts, setHotProducts] = useState([]);
+    const [categoryStats, setCategoryStats] = useState([]);
 
     useEffect(() => {
-        // 模拟加载效果
-        setTimeout(() => {
-            setLoading(false);
-        }, 1000);
-
-        // 注释掉实际的API调用
-        // fetchDashboardData();
+        fetchDashboardData();
     }, []);
 
-    // 实际的API调用函数，暂时注释掉
-    /*
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [overviewRes, visitRes, hotProductsRes, categoryRes] = await Promise.all([
-                dashboardService.getDashboardOverview(),
-                dashboardService.getVisitStats(7),
-                dashboardService.getHotProducts(),
-                dashboardService.getCategoryStats()
-            ]);
-
-            setOverview(overviewRes.data);
-            setVisitData(visitRes.data);
-            setHotProducts(hotProductsRes.data);
-            setCategoryStats(categoryRes.data);
+            const response = await showService.getHomePage();
+            const { data } = response;
+            
+            setOverview({
+                totalProducts: data.onlineProductTotal,
+                totalCategories: data.onlineProductCategoryCount,
+                dailyComments: data.dailyNewComments,
+                growthRate: data.commentGrowthRate
+            });
+            
+            setVisitData(data.transactionStatisticsVOList.map(item => ({
+                date: item.date,
+                count: item.transactionVolume
+            })));
+            
+            setHotProducts(data.popularProductVOList.map(item => ({
+                rank: item.rank,
+                title: item.contentTitle,
+                views: `${item.sellCount}次`,
+                growth: item.dailyGrowthRate
+            })));
+            
+            setCategoryStats(data.categoryRatioVOList.map(item => ({
+                type: item.categoryName,
+                value: item.categoryRatio
+            })));
         } catch (error) {
             console.error('获取仪表板数据失败:', error);
         } finally {
             setLoading(false);
         }
     };
-    */
 
     // 访问统计图配置
     const visitOption = {
         title: {
-            text: '访问统计（近7日）',
+            text: '交易量统计（近7日）',
             left: 'center'
         },
         tooltip: {
@@ -103,7 +84,7 @@ const Dashboard = () => {
         },
         yAxis: {
             type: 'value',
-            name: '访问量'
+            name: '交易量'
         },
         series: [{
             data: visitData.map(item => item.count),
@@ -138,47 +119,84 @@ const Dashboard = () => {
     // 分类统计饼图配置
     const pieOption = {
         title: {
-            text: '内容类别占比',
+            text: '商品类别占比',
             left: 'center'
         },
         tooltip: {
             trigger: 'item',
-            formatter: '{a} <br/>{b}: {c}% ({d}%)'
+            formatter: '{b}: {c}%'
         },
         legend: {
             orient: 'vertical',
-            left: 'left',
-            top: 'middle'
+            left: '5%',
+            top: 'middle',
+            itemWidth: 10,
+            itemHeight: 10,
+            textStyle: {
+                fontSize: 12,
+                padding: [3, 0, 3, 0]
+            }
         },
         series: [{
             name: '类别占比',
             type: 'pie',
-            radius: ['50%', '70%'],
-            avoidLabelOverlap: false,
+            radius: ['40%', '70%'],
+            center: ['65%', '50%'],
+            avoidLabelOverlap: true,
+            itemStyle: {
+                borderRadius: 4,
+                color: function(params) {
+                    const colors = [
+                        '#FF6B6B', // 红色
+                        '#4ECDC4', // 青色
+                        '#45B7D1', // 蓝色
+                        '#96CEB4', // 绿色
+                        '#FFEEAD', // 黄色
+                        '#D4A5A5', // 粉色
+                        '#9370DB', // 紫色
+                        '#20B2AA', // 青绿
+                        '#FF8C00', // 橙色
+                        '#BA55D3', // 紫红
+                        '#40E0D0', // 绿松石
+                        '#FF69B4', // 粉红
+                        '#32CD32', // 酸橙绿
+                        '#4169E1'  // 宝蓝
+                    ];
+                    return colors[params.dataIndex % colors.length];
+                },
+                borderColor: '#fff',
+                borderWidth: 2
+            },
             label: {
                 show: true,
                 position: 'outside',
-                formatter: '{b}: {c}%'
+                formatter: '{b}: {c}%',
+                fontSize: 12
             },
             emphasis: {
                 label: {
                     show: true,
-                    fontSize: '16',
+                    fontSize: 14,
                     fontWeight: 'bold'
+                },
+                itemStyle: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
                 }
             },
             labelLine: {
-                show: true
+                show: true,
+                length: 10,
+                length2: 10,
+                smooth: true
             },
             data: categoryStats.map(item => ({
                 name: item.type,
-                value: item.value,
-                itemStyle: {
-                    color: item.type === '油炸类' ? '#1890ff' :
-                           item.type === '生鲜类' ? '#52c41a' :
-                           '#722ed1'
-                }
-            }))
+                value: item.value
+            })),
+            animationType: 'scale',
+            animationEasing: 'elasticOut'
         }]
     };
 
@@ -198,7 +216,7 @@ const Dashboard = () => {
             ellipsis: true
         },
         {
-            title: '点击量',
+            title: '销售量',
             dataIndex: 'views',
             key: 'views',
             width: 120,
@@ -234,7 +252,7 @@ const Dashboard = () => {
                         <Statistic
                             title="线上商品总数量"
                             value={overview.totalProducts}
-                            suffix="w+"
+                            suffix="个"
                             valueStyle={{ color: '#3f8600' }}
                         />
                     </Card>
@@ -277,7 +295,7 @@ const Dashboard = () => {
             </Card>
 
             <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-                <Col span={16}>
+                <Col span={12}>
                     <Card 
                         hoverable
                         title={<span style={{ fontWeight: 'bold' }}>线上热门商品</span>}
@@ -292,7 +310,7 @@ const Dashboard = () => {
                         />
                     </Card>
                 </Col>
-                <Col span={8}>
+                <Col span={12}>
                     <Card hoverable>
                         <ReactECharts option={pieOption} style={{ height: '300px' }} />
                     </Card>

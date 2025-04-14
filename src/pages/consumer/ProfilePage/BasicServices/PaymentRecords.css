@@ -1,0 +1,128 @@
+.payment-records-container {
+  padding: 16px;
+  background-color: #f5f5f5;
+  min-height: 80vh;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.back-button {
+  margin-right: 8px;
+  padding: 0;
+}
+
+.filter-card {
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.filter-label {
+  margin-right: 8px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.filter-buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.table-card {
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 移动端列表样式 */
+.payment-mobile-list {
+  margin-top: 8px;
+}
+
+.payment-list-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.payment-list-desc {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-list-info {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.payment-time {
+  margin-left: 8px;
+  color: #999;
+  font-size: 12px;
+}
+
+.payment-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e6f7ff;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .payment-records-container {
+    padding: 12px;
+  }
+  
+  .page-header {
+    margin-bottom: 12px;
+  }
+  
+  .filter-buttons {
+    justify-content: flex-start;
+    margin-top: 16px;
+  }
+  
+  .filter-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filter-label {
+    margin-bottom: 8px;
+  }
+  
+  .table-card {
+    margin-bottom: 12px;
+  }
+  
+  /* 移动端表格隐藏某些列 */
+  .ant-table-column-title {
+    font-size: 13px;
+  }
+  
+  .ant-table-cell {
+    padding: 8px 4px !important;
+    font-size: 12px;
+  }
+}
+
+/* 平板布局优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .filter-card, .table-card {
+    margin-bottom: 20px;
+  }
+}

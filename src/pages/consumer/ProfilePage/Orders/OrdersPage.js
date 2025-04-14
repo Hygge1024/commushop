@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Tabs, Card, List, Tag, Space, Button, Empty, message } from 'antd';
-import { ShoppingOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Typography, Tabs, Card, List, Tag, Space, Button, Empty, message, Modal, Input, Form } from 'antd';
+import { ShoppingOutlined, ClockCircleOutlined, RollbackOutlined } from '@ant-design/icons';
 import { orderNewService } from '../../../../services/orderNewService';
 import OrderDetailModal from '../../../../components/OrderDetailModal';
 import dayjs from 'dayjs';
@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
+const { TextArea } = Input;
 
 // 订单状态定义
 const ORDER_STATUS = {
@@ -44,6 +45,10 @@ const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [refundModalVisible, setRefundModalVisible] = useState(false);
+  const [refundOrderId, setRefundOrderId] = useState(null);
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // 获取订单列表
   const fetchOrders = async () => {
@@ -82,6 +87,10 @@ const OrdersPage = () => {
     if (status === '1') {
       return orders.filter(order => order.orderStatus === 0 || order.orderStatus === 1);
     }
+    // 如果是退款/售后状态，显示所有状态大于5的订单
+    if (status === 'refund') {
+      return orders.filter(order => order.orderStatus > 5);
+    }
     return orders.filter(order => order.orderStatus === parseInt(status));
   };
 
@@ -102,6 +111,65 @@ const OrdersPage = () => {
         }]
       }
     });
+  };
+
+  // 打开申请退款弹窗
+  const showRefundModal = (e, order) => {
+    e.stopPropagation(); // 阻止事件冒泡，避免触发订单详情
+    setRefundOrderId(order.orderId);
+    setRefundModalVisible(true);
+  };
+
+  // 关闭申请退款弹窗
+  const handleRefundCancel = () => {
+    setRefundModalVisible(false);
+    setRefundOrderId(null);
+  };
+
+  // 提交退款申请
+  const handleRefundSubmit = async () => {
+    try {
+      setRefundSubmitting(true);
+      const result = await orderNewService.refund.apply(refundOrderId, {});
+
+      if (result.success) {
+        message.success('退款申请提交成功');
+        handleRefundCancel();
+        fetchOrders(); // 刷新订单列表
+      } else {
+        message.error(result.message || '退款申请提交失败');
+      }
+    } catch (error) {
+      console.error('申请退款失败:', error);
+      message.error('申请退款失败，请稍后再试');
+    } finally {
+      setRefundSubmitting(false);
+    }
+  };
+
+  // 确认收货
+  const handleConfirmReceived = async (e, order) => {
+    e.stopPropagation(); // 阻止事件冒泡，避免触发订单详情
+    
+    try {
+      setConfirmLoading(true);
+      const response = await orderNewService.updateOrderStatus({
+        orderId: order.orderId,
+        orderStatus: ORDER_STATUS.RECEIVED // 5: 已收货（完成）
+      });
+
+      if (response.code === 200) {
+        message.success('确认收货成功');
+        fetchOrders(); // 刷新订单列表
+      } else {
+        message.error(response.msg || '确认收货失败');
+      }
+    } catch (error) {
+      console.error('确认收货失败:', error);
+      message.error('确认收货失败，请稍后再试');
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   // 渲染订单列表项
@@ -150,7 +218,24 @@ const OrdersPage = () => {
             </Button>
           )}
           {order.orderStatus === ORDER_STATUS.DELIVERED && (
-            <Button type="primary" size="small">确认收货</Button>
+            <Button 
+              type="primary" 
+              size="small"
+              loading={confirmLoading}
+              onClick={(e) => handleConfirmReceived(e, order)}
+            >
+              确认收货
+            </Button>
+          )}
+          {order.orderStatus === ORDER_STATUS.RECEIVED && (
+            <Button 
+              type="default" 
+              size="small"
+              icon={<RollbackOutlined />}
+              onClick={(e) => showRefundModal(e, order)}
+            >
+              申请售后
+            </Button>
           )}
         </div>
       </Card>
@@ -164,7 +249,7 @@ const OrdersPage = () => {
     { key: '3', label: `运输中${getFilteredOrders('3').length ? ` (${getFilteredOrders('3').length})` : ''}` },
     { key: '4', label: `待收货${getFilteredOrders('4').length ? ` (${getFilteredOrders('4').length})` : ''}` },
     { key: '5', label: `已完成${getFilteredOrders('5').length ? ` (${getFilteredOrders('5').length})` : ''}` },
-    { key: '6', label: `退款申请${getFilteredOrders('6').length ? ` (${getFilteredOrders('6').length})` : ''}` }
+    { key: 'refund', label: `退款/售后${getFilteredOrders('refund').length ? ` (${getFilteredOrders('refund').length})` : ''}` }
   ];
 
   return (
@@ -187,11 +272,37 @@ const OrdersPage = () => {
       <OrderDetailModal
         visible={detailModalVisible}
         orderCode={selectedOrder?.orderCode}
+        initialOrderInfo={selectedOrder}
         onClose={() => {
           setDetailModalVisible(false);
           setSelectedOrder(null);
         }}
       />
+
+      {/* 申请退款弹窗 */}
+      <Modal
+        title="申请售后退款"
+        open={refundModalVisible}
+        onCancel={handleRefundCancel}
+        footer={[
+          <Button key="cancel" onClick={handleRefundCancel}>
+            取消
+          </Button>,
+          <Button 
+            key="submit" 
+            type="primary" 
+            loading={refundSubmitting} 
+            onClick={handleRefundSubmit}
+          >
+            确认申请
+          </Button>,
+        ]}
+      >
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <p>您确定要为此订单申请售后退款吗？</p>
+          <p style={{ color: '#999', fontSize: '14px' }}>申请后，商家将会审核您的退款请求</p>
+        </div>
+      </Modal>
     </div>
   );
 };

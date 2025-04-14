@@ -3,6 +3,7 @@ import { Typography, Card, List, Tag, Space, Button, Empty, message, Modal } fro
 import { ShoppingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { orderNewService } from '../../../../services/orderNewService';
+import { chatMessageService } from '../../../../services/chatMessageService';
 import OrderDetailModal from '../../../../components/OrderDetailModal';
 import dayjs from 'dayjs';
 
@@ -127,8 +128,26 @@ const PendingReceive = () => {
           <Button type="primary" size="small" onClick={() => handleConfirmReceive(order)}>
             确认收货
           </Button>
-          <Button size="small">查看物流</Button>
-          <Button size="small">联系客服</Button>
+          <Button 
+            size="small" 
+            onClick={async (e) => {
+              e.stopPropagation();
+              const userId = localStorage.getItem('userId');
+              try {
+                await chatMessageService.sendMessage(
+                  userId,
+                  order.leaderId,
+                  `请查看我当前的订单 ${order.orderCode}`
+                );
+                message.success('消息已发送给团长');
+                // 跳转到聊天管理页面
+                navigate('/consumer/basic-services/chat-management');
+              } catch (error) {
+                console.error('发送消息失败:', error);
+                message.error('发送消息失败');
+              }
+            }}
+          >联系团长</Button>
         </div>
       </Card>
     </List.Item>

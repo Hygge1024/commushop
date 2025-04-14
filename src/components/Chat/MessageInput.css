@@ -1,0 +1,93 @@
+.message-input-container {
+    padding: 12px;
+    border-top: 1px solid #f0f0f0;
+    background: #fff;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    flex-shrink: 0; /* 防止输入框被压缩 */
+}
+
+@media (max-width: 768px) {
+    .message-input-container {
+        padding: 8px;
+        position: fixed;
+        bottom: 80px; /* 底部导航栏高度 */
+        left: 0;
+        right: 0;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    }
+}
+
+.message-input-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.message-textarea {
+    flex: 1;
+    border-radius: 4px;
+    resize: none;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.message-textarea:focus {
+    box-shadow: none;
+    border-color: #1890ff;
+}
+
+.send-button {
+    min-width: 80px;
+    height: 38px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-tips {
+    margin-top: 8px;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+    text-align: right;
+}
+
+/* 移动端样式 */
+@media (max-width: 768px) {
+    .message-input-container {
+        padding: 10px;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .message-input-wrapper {
+        gap: 6px;
+    }
+    
+    .message-textarea {
+        border-radius: 18px;
+        padding: 8px 16px;
+    }
+    
+    .send-button {
+        min-width: 40px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .send-button span {
+        display: none;
+    }
+    
+    .input-tips {
+        display: none; /* 移动端隐藏提示文本 */
+    }
+}

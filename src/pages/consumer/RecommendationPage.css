@@ -1,0 +1,171 @@
+.recommendation-page {
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  min-height: calc(100vh - 64px);
+}
+
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.back-button {
+  margin-right: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.recommendation-tabs {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+  font-weight: normal;
+}
+
+.tab-content {
+  padding: 16px 0;
+}
+
+.product-list {
+  margin-top: 16px;
+}
+
+.product-card {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 修复卡片内部的灰色区域问题 */
+.product-card .ant-card-cover {
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  font-size: 0;
+  background: transparent;
+}
+
+.product-card .ant-card-body {
+  padding: 16px;
+}
+
+.product-card .ant-card-actions {
+  border-top: none;
+  margin-top: 0;
+  background: white;
+  padding: 8px 0;
+}
+
+.product-card .ant-card-actions > li {
+  margin: 0;
+}
+
+.product-card .ant-card-actions button {
+  border-radius: 4px;
+  height: 36px;
+  font-weight: 500;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+  height: 220px;
+  object-fit: cover;
+  background: linear-gradient(120deg, #e0f2ff, #f0f9ff);
+  cursor: pointer;
+  width: 100%;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.no-image {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(120deg, #f0f0f0, #e0e0e0);
+  color: #999;
+  cursor: pointer;
+}
+
+.product-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f5222d;
+  margin-bottom: 4px;
+}
+
+.recommend-product-score {
+  font-size: 12px;
+  color: #1890ff;
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.recommend-product-score span {
+  background: linear-gradient(135deg, #e6f7ff, #bae7ff);
+  padding: 4px 10px;
+  border-radius: 15px;
+  border: 2px solid #91d5ff;
+  box-shadow: 0 3px 6px rgba(24, 144, 255, 0.2), 0 0 0 1px rgba(24, 144, 255, 0.05);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  color: #0050b3;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 3px 6px rgba(24, 144, 255, 0.2), 0 0 0 1px rgba(24, 144, 255, 0.05);
+  }
+  50% {
+    box-shadow: 0 3px 10px rgba(24, 144, 255, 0.4), 0 0 0 2px rgba(24, 144, 255, 0.1);
+  }
+  100% {
+    box-shadow: 0 3px 6px rgba(24, 144, 255, 0.2), 0 0 0 1px rgba(24, 144, 255, 0.05);
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+}

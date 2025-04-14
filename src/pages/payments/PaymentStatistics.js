@@ -12,7 +12,7 @@ const PaymentStatistics = () => {
     const [statistics, setStatistics] = useState(null);// 统计数据
     const [dateRange, setDateRange] = useState([
         dayjs('2024-01-01 00:00:00'),
-        dayjs('2025-03-05 23:59:59')
+        dayjs('2025-05-05 23:59:59')
     ]);// 日期范围
 
     useEffect(() => {

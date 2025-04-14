@@ -31,6 +31,9 @@ import CustomerService from './ProfilePage/BasicServices/CustomerService';
 import ChangePassword from './ProfilePage/BasicServices/ChangePassword';
 import Settings from './ProfilePage/BasicServices/Settings';
 import MyReviews from './ProfilePage/BasicServices/MyReviews';
+import ChatManagement from './ProfilePage/BasicServices/ChatManagement';
+import PaymentRecords from './ProfilePage/BasicServices/PaymentRecords';
+import RecommendationPage from './RecommendationPage';
 
 const { Content, Footer } = Layout;
 const { useBreakpoint } = Grid;
@@ -108,6 +111,11 @@ const ConsumerHome = () => {
           <Route path="/consumer/basic-services/change-password" element={<ChangePassword />} />
           <Route path="/consumer/basic-services/settings" element={<Settings />} />
           <Route path="/consumer/basic-services/my-reviews" element={<MyReviews />} />
+          <Route path="/consumer/basic-services/chat-management" element={<ChatManagement />} />
+          <Route path="/consumer/basic-services/payment-records" element={<PaymentRecords />} />
+          
+          {/* 推荐详情页面路由 */}
+          <Route path="/consumer/recommendations" element={<RecommendationPage />} />
 
           <Route path="/consumer/" element={<Navigate to="home" replace />} />
         </Routes>

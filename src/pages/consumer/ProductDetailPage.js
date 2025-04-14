@@ -330,13 +330,6 @@ const ProductDetailPage = () => {
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>商品评价 ({reviewPagination.total})</span>
-            <Button 
-              type="primary" 
-              icon={<CommentOutlined />}
-              onClick={() => setIsReviewModalVisible(true)}
-            >
-              写评价
-            </Button>
           </div>
         }
         className="product-reviews-card"
@@ -380,7 +373,7 @@ const ProductDetailPage = () => {
                 {review.evaluationContent}
               </div>
               <div style={{ color: '#999', fontSize: '12px' }}>
-                {review.createTime ? new Date(review.createTime).toLocaleDateString() : '暂无时间'}
+                {review.evaluationTime ? new Date(review.evaluationTime).toLocaleDateString() : '暂无时间'}
               </div>
             </List.Item>
           )}

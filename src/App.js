@@ -10,6 +10,7 @@ import {
   SettingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  CustomerServiceOutlined,
 } from '@ant-design/icons';
 import './App.css';
 import UserAvatar from './components/UserAvatar';
@@ -37,6 +38,8 @@ import UserList from './pages/users/UserList';
 import UserStatistics from './pages/users/UserStatistics';
 import ConsumerHome from './pages/consumer/ConsumerHome';
 import LeaderHome from './pages/leader/LeaderHome';
+import AfterSalesManagement from './pages/aftersales/AfterSalesManagement';
+import ChatManagement from './pages/aftersales/ChatManagement';
 
 const { Header, Sider, Content } = Layout;
 
@@ -133,9 +136,9 @@ function App() {
                   <Menu.Item key="3-2">
                     <Link to="/activities/create">创建活动</Link>
                   </Menu.Item>
-                  <Menu.Item key="3-3">
+                  {/* <Menu.Item key="3-3">
                     <Link to="/activities/statistics">活动统计</Link>
-                  </Menu.Item>
+                  </Menu.Item> */}
                 </Menu.SubMenu>
 
                 <Menu.SubMenu key="sub4" icon={<OrderedListOutlined />} title="订单管理">
@@ -148,15 +151,25 @@ function App() {
                 </Menu.SubMenu>
 
                 <Menu.SubMenu key="sub5" icon={<PayCircleOutlined />} title="支付管理">
-                  <Menu.Item key="5-1">
+                  <Menu.Item key="13">
                     <Link to="/payments/list">支付查询</Link>
                   </Menu.Item>
-                  <Menu.Item key="5-2">
+                  <Menu.Item key="14">
                     <Link to="/payments/statistics">支付统计</Link>
                   </Menu.Item>
                 </Menu.SubMenu>
 
-                <Menu.SubMenu key="sub6" icon={<SettingOutlined />} title="用户管理">
+                {/* 售后管理菜单 */}
+                <Menu.SubMenu key="sub6" icon={<CustomerServiceOutlined />} title="售后管理">
+                  <Menu.Item key="15">
+                    <Link to="/aftersales/chat">聊天管理</Link>
+                  </Menu.Item>
+                  <Menu.Item key="16">
+                    <Link to="/aftersales/management">售后处理</Link>
+                  </Menu.Item>
+                </Menu.SubMenu>
+
+                <Menu.SubMenu key="sub7" icon={<SettingOutlined />} title="用户管理">
                   <Menu.Item key="6-1">
                     <Link to="/settings/users">用户查询</Link>
                   </Menu.Item>
@@ -218,7 +231,8 @@ function App() {
                     <Route path="/payments/statistics" element={<PaymentStatistics />} />
                     <Route path="/settings/users" element={<UserList />} />
                     <Route path="/settings/user-statistics" element={<UserStatistics />} />
-                    {/* <Route path="/consumer/product/:productId" element={<ProductDetailPage />} /> */}
+                    <Route path="aftersales/management" element={<AfterSalesManagement />} />
+                    <Route path="aftersales/chat" element={<ChatManagement />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </div>
@@ -383,6 +397,8 @@ const LeaderLayout = () => {
           <Route path="orders/statistics" element={<OrderStatistics />} />
           <Route path="payments/list" element={<PaymentList />} />
           <Route path="payments/statistics" element={<PaymentStatistics />} />
+          <Route path="aftersales/management" element={<AfterSalesManagement />} />
+          <Route path="aftersales/chat" element={<ChatManagement />} />
           <Route path="settings/users" element={<UserList />} />
           <Route path="settings/user-statistics" element={<UserStatistics />} />
           <Route path="consumer_home" element={<ConsumerHome />} />

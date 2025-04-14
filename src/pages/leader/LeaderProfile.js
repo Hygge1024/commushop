@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Avatar, Button, Row, Col, Statistic, Modal, Form, Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../../services/userService';
+import { chatMessageService } from '../../services/chatMessageService';
 import {
   UserOutlined,
   TeamOutlined,
@@ -10,7 +11,8 @@ import {
   SettingOutlined,
   BellOutlined,
   SafetyCertificateOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  MessageOutlined
 } from '@ant-design/icons';
 import './LeaderProfile.css';
 
@@ -18,6 +20,7 @@ const LeaderProfile = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [form] = Form.useForm();
 
   // 获取用户信息
@@ -33,8 +36,29 @@ const LeaderProfile = () => {
     }
   };
 
+  // 获取未读消息数量
+  const fetchUnreadCount = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        const response = await chatMessageService.getUnreadCount(userId);
+        if (response.success) {
+          setUnreadCount(response.data);
+        }
+      }
+    } catch (error) {
+      console.error('获取未读消息数量失败:', error);
+    }
+  };
+
   useEffect(() => {
     fetchUserInfo();
+    fetchUnreadCount();
+    
+    // 每分钟更新一次未读消息数量
+    const intervalId = setInterval(fetchUnreadCount, 60000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   // 处理修改信息
@@ -88,10 +112,12 @@ const LeaderProfile = () => {
 
       <div className="profile-menu">
         <Card>
-          <div className="menu-item">
-            <BellOutlined />
-            <span>消息通知</span>
-            <span className="notification-badge">3</span>
+          <div className="menu-item" onClick={() => navigate('/leader/chat-management')}>
+            <MessageOutlined />
+            <span>消息管理</span>
+            {unreadCount > 0 && (
+              <span className="notification-badge">{unreadCount}</span>
+            )}
           </div>
           <div className="menu-item">
             <SafetyCertificateOutlined />

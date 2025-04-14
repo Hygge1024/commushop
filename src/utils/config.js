@@ -42,6 +42,7 @@ export const API_ENDPOINTS = {
         UPDATE: '/api/updateUserInfo',
         PASSWORD: '/api/updatePassword',
         USERDETAILs: '/api/userDetails',
+        BY_ID: '/api/user/byUserId',
     },
     ACTIVITY: {
         LIST: '/api/activity/page',
@@ -67,12 +68,22 @@ export const API_ENDPOINTS = {
 
         //查看商品详情部分
         "LISTDETAIL": "api/order/pagedetail",
-        "ADDLIST": "api/order/batch"
+        "DETAIL_BY_ORDERID": "api/order/pagedetail/byOrderId",
+        "ADDLIST": "api/order/batch",
+        //售后
+        "REFUND": {
+            "APPLY": (orderId) => `/api/order/refund/apply/${orderId}`,
+            "APPROVE": (orderId) => `/api/order/refund/approve/${orderId}`,
+            "REJECT": (orderId) => `/api/order/refund/reject/${orderId}`,
+            "COMPLETE": (orderId) => `/api/order/refund/complete/${orderId}`
+        }
     },
     // 支付管理
     PAYMENT: {
         PAGE_DETAILS: `${API_BASE_URL}/api/payment/pageDetails`,
         STATISTICS: `${API_BASE_URL}/api/payment/statistics`,
+        CREATE: `${API_BASE_URL}/api/payment/create`,
+        PAGE: `${API_BASE_URL}/api/payment/page`,
     },
     //购物车
     CART: {
@@ -111,5 +122,21 @@ export const API_ENDPOINTS = {
         SEND: '/api/chat',
         LIST: (username) => `/api/chat/history/${username}`,
         SENDREASON: '/api/chat/reasoner/stream',
+    },
+    CHAT_MESSAGE: {
+        SEND: '/api/chat/send',
+        GET_LIST: '/api/chat/list',
+        GET_HISTORY: '/api/chat/history',
+        DELETE: (chatId) => `/api/chat/${chatId}`,
+        UNREAD_COUNT: '/api/chat/unread/count',
+        MARK_READ: (chatId) => `/api/chat/read/${chatId}`,
+    },
+    RECOMMEND: {
+        HYBRID_PRODUCTS: (userId) => `/api/recommend/hybrid/products/${userId}`,
+        CF_PRODUCTS: (userId) => `/api/recommend/cf/products/${userId}`,
+        CONTENT_PRODUCTS: (userId) => `/api/recommend/content/products/${userId}`
+    },
+    SHOW: {
+        HOME_PAGE: '/api/show/homepage'
     }
 };

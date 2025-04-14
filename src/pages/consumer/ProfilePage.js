@@ -13,7 +13,9 @@ import {
   CustomerServiceOutlined,
   SettingOutlined,
   LockOutlined,
-  CommentOutlined
+  CommentOutlined,
+  MessageOutlined,
+  CreditCardOutlined
 } from '@ant-design/icons';
 import { userService } from '../../services/userService';
 import './ProfilePage.css';
@@ -117,6 +119,14 @@ const ProfilePage = () => {
           <div className="service-type" onClick={() => navigate('/consumer/basic-services/change-password')}>
             <LockOutlined />
             <span>修改密码</span>
+          </div>
+          <div className="service-type" onClick={() => navigate('/consumer/basic-services/chat-management')}>
+            <MessageOutlined />
+            <span>聊天管理</span>
+          </div>
+          <div className="service-type" onClick={() => navigate('/consumer/basic-services/payment-records')}>
+            <CreditCardOutlined />
+            <span>支付记录</span>
           </div>
         </div>
       </div>

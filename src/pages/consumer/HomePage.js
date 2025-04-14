@@ -22,6 +22,7 @@ import {
 import { goodsService } from '../../services/goodsService';
 import { categoryService } from '../../services/categoryService';
 import { cartService } from '../../services/cartService';
+import { recommendService } from '../../services/recommendService';
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 
@@ -33,6 +34,9 @@ const HomePage = () => {
   const [categories, setCategories] = useState([]); 
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [recommendLoading, setRecommendLoading] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const pageSize1 = 10; 
   const pageSize2 = 999; 
   const containerRef = useRef(null);
@@ -168,11 +172,35 @@ const HomePage = () => {
     loadProducts(1);
   };
 
+  // 获取推荐商品
+  const fetchRecommendedProducts = async () => {
+    try {
+      setRecommendLoading(true);
+      const userId = localStorage.getItem('userId') || 2; // 默认用户ID为2
+      const response = await recommendService.getRecommendProducts(userId, 10);
+      
+      if (response.success && response.data) {
+        setRecommendedProducts(response.data);
+      } else {
+        console.error('获取推荐商品失败:', response);
+        // 如果API调用失败，设置一些默认商品或清空列表
+        setRecommendedProducts([]);
+      }
+    } catch (error) {
+      console.error('获取推荐商品错误:', error);
+      setRecommendedProducts([]);
+    } finally {
+      setRecommendLoading(false);
+    }
+  };
+
   // 初始化数据
   useEffect(() => {
     loadProducts(1);
-    fetchCategories(); 
-  }, []);
+    fetchCategories();
+    fetchRecommendedProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 只在组件挂载时执行一次
 
   // 添加滚动监听
   useEffect(() => {
@@ -223,15 +251,68 @@ const HomePage = () => {
         />
       </div>
 
-      {/* 轮播图 */}
-      <Carousel autoplay className="banner-carousel">
-        <div>
-          <img src="https://images.squarespace-cdn.com/content/v1/62e7a92f066fa3730dcd4604/fd214ba5-c71d-4a15-8096-9d1b343fdfe9/v2-882nu-e2v26.jpg" alt="Banner 1" />
+      {/* 推荐商品轮播图 */}
+      <div className="recommend-section">
+        <div className="section-header">
+          <h2 className="section-title">为您推荐</h2>
+          <span 
+            className="view-more-link" 
+            onClick={() => navigate('/consumer/recommendations')}
+          >
+            查看更多推荐 &gt;
+          </span>
         </div>
-        <div>
-          <img src="https://th.bing.com/th/id/R.c04d6d26fbceb76457a55b44d8190160?rik=HNnXjsjRWMIGdQ&riu=http%3a%2f%2fwww.baicaolu.com%2fuploads%2f201508%2f1440211512NFZzLpOu.jpg&ehk=iZiyvpX0cug1l5JQ4e%2fXgRtEfQCepUGL7my9hZRbcMY%3d&risl=&pid=ImgRaw&r=0" alt="Banner 2" />
-        </div>
-      </Carousel>
+        {recommendLoading ? (
+          <div className="loading-container">
+            <Spin />
+          </div>
+        ) : recommendedProducts.length > 0 ? (
+          <div className="carousel-container">
+            <div className="carousel-indicator">
+              <span className="current-slide">{currentSlide + 1}</span>
+              <span className="slide-separator">/</span>
+              <span className="total-slides">{recommendedProducts.length}</span>
+            </div>
+            <Carousel 
+              autoplay 
+              className="banner-carousel" 
+              dots={true}
+              dotPosition="bottom"
+              effect="fade"
+              afterChange={(current) => {
+                // 当前轮播图索引变化时的回调
+                setCurrentSlide(current);
+              }}
+            >
+            {recommendedProducts.map((product, index) => (
+              <div key={product.productId} onClick={() => handleProductClick(product)}>
+                <div className="recommend-product-card">
+                  <div className="recommend-product-image">
+                    {product.mainPicture ? (
+                      <img src={product.mainPicture} alt={product.productName} />
+                    ) : (
+                      <div className="no-image">暂无图片</div>
+                    )}
+                  </div>
+                  <div className="recommend-product-info">
+                    <h3 className="recommend-product-name">{product.productName}</h3>
+                    <p className="recommend-product-description">{product.description}</p>
+                    <p className="recommend-product-price">¥{product.price?.toFixed(2) || '0.00'}</p>
+                    <div className="recommend-product-score">
+                      <span>推荐度: {(product.score * 10).toFixed(1)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </Carousel>
+          </div>
+        ) : (
+          <div className="no-recommend">
+            <p>暂无推荐商品</p>
+          </div>
+        )}
+      </div>
 
       {/* 分类导航 */}
       <div className="category-nav">

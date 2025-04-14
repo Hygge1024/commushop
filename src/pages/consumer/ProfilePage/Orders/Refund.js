@@ -4,6 +4,8 @@ import { ShoppingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { orderNewService } from '../../../../services/orderNewService';
 import OrderDetailModal from '../../../../components/OrderDetailModal';
+import { chatMessageService } from '../../../../services/chatMessageService';
+
 import dayjs from 'dayjs';
 
 const { Title, Text, TextArea } = Typography;
@@ -189,7 +191,26 @@ const Refund = () => {
               取消退款
             </Button>
           )}
-          <Button size="small">联系客服</Button>
+           <Button 
+                      size="small" 
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const userId = localStorage.getItem('userId');
+                        try {
+                          await chatMessageService.sendMessage(
+                            userId,
+                            1,
+                            `请查看我当前的订单 ${order.orderCode}`
+                          );
+                          message.success('消息已发送给管理员');
+                          // 跳转到聊天管理页面
+                          navigate('/consumer/basic-services/chat-management');
+                        } catch (error) {
+                          console.error('发送消息失败:', error);
+                          message.error('发送消息失败');
+                        }
+                      }}
+                    >联系团长</Button>
         </div>
       </Card>
     </List.Item>

@@ -16,6 +16,7 @@ const LeaderDashboard = lazy(() => import('./LeaderDashboard'));
 const LeaderDelivery = lazy(() => import('./LeaderDelivery'));
 const LeaderService = lazy(() => import('./LeaderService'));
 const LeaderProfile = lazy(() => import('./LeaderProfile'));
+const LeaderChatManagement = lazy(() => import('./ChatManagement'));
 
 
 
@@ -85,9 +86,9 @@ const LeaderHome = () => {
 
             {/* 个人中心路由 */}
             <Route path="/leader/profile" element={<LeaderProfile />} />
-
-
-
+            
+            {/* 聊天管理路由 */}
+            <Route path="/leader/chat-management" element={<LeaderChatManagement />} />
 
             <Route path="/leader/" element={<Navigate to="home" replace />} />
           </Routes>

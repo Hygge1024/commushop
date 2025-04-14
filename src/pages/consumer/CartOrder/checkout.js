@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { orderNewService } from '../../../services/orderNewService';
 import { userService } from '../../../services/userService';
 import { fixedService } from '../../../services/fixed.js';
+import { paymentService } from '../../../services/paymentService';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -216,7 +217,8 @@ const Checkout = () => {
 
       // 获取订单信息
       const order = selectedItems[0];
-      console.log(order);
+      console.log('订单信息:', order);
+      
       // 更新订单状态
       const orderData = {
         orderId: order.id, // 订单ID
@@ -226,14 +228,28 @@ const Checkout = () => {
         totalMoney: parseFloat(order.totalMoney || 0)
       };
 
-      const response = await orderNewService.updateOrderStatus(orderData);
-
-      if (response.code === 200) {
-        setPaymentModalVisible(false);
-        message.success('支付成功');
-        // 支付成功后跳转到订单列表页面
-        navigate('/consumer/orders');
+      // 1. 先创建支付记录
+      const paymentMethodText = paymentMethod === 'wechat' ? '微信支付' : '支付宝支付';
+      const paymentResponse = await paymentService.createPayment(order.id, paymentMethodText);
+      
+      if (paymentResponse.code === 200) {
+        console.log('支付记录创建成功:', paymentResponse.data);
+        
+        // 2. 再更新订单状态
+        const orderResponse = await orderNewService.updateOrderStatus(orderData);
+        
+        if (orderResponse.code === 200) {
+          setPaymentModalVisible(false);
+          message.success('支付成功');
+          // 支付成功后跳转到订单列表页面
+          navigate('/consumer/orders');
+        } else {
+          console.error('更新订单状态失败:', orderResponse.msg);
+          message.warning('支付记录已创建，但订单状态更新失败');
+          navigate('/consumer/orders');
+        }
       } else {
+        console.error('创建支付记录失败:', paymentResponse.msg);
         message.error('支付失败，请稍后重试');
       }
     } catch (error) {
